@@ -9,6 +9,7 @@ import board
 import adafruit_sht31d
 import RPi.GPIO as GPIO
 import threading
+
 # --- MQTT 설정 ---
 # TODO: GCP Mosquitto 브로커 VM의 실제 외부 IP 주소로 변경하세요.
 MQTT_BROKER_IP = ""
@@ -25,7 +26,7 @@ arduino_interval = 60
 raspi_interval = 10
 
 # ⭐ GPIO 핀 설정 ⭐
-# 릴레이 모듈은 active_high=False (0값 주면 켜짐)
+# 릴레이 모듈은 active_high=False (0값 주면 켜짐, 1값 주면 꺼짐)
 MODULE_PINS = {
     "coolerA": 26,
     "coolerB": 19,
@@ -35,15 +36,13 @@ MODULE_PINS = {
 }
 
 # GPIO 출력 장치 객체 생성
-# initial_value=False는 핀을 High로 설정하여 모듈을 꺼진 상태로 시작합니다.
-modules = MODULE_PINS
-
 def setup_gpios():
-	GPIO.setmode(GPIO.BCM)
-	for pin in MODULE_PINS.values():
-		GPIO.setup(pin, GPIO.OUT)
-		GPIO.output(pin, GPIO.HIGH)
-		print(f"GPIO pin {pin} is set up.")
+    GPIO.setmode(GPIO.BCM)
+    for pin in MODULE_PINS.values():
+        GPIO.setup(pin, GPIO.OUT)
+        # 핀을 HIGH로 설정하여 모든 모듈을 꺼진 상태로 시작합니다.
+        GPIO.output(pin, GPIO.HIGH)
+        print(f"GPIO pin {pin} is set up.")
 
 
 # SHT31D 센서 설정
@@ -60,12 +59,12 @@ temp_arr = [0.0] * 6
 humi_arr = [0.0] * 6
 reading_index = 0
 
-
+# --- 워터펌프 자동 종료 로직 ---
 def turn_off_pump_after_time():
-	pump_pin = MODULE_PINS["waterPump"]
-	GPIO.output(pump_pin, GPIO.LOW)
-	print(f" -> waterPump 10s on. (GPIO {pump_pin})") 
-
+    pump_pin = MODULE_PINS["waterPump"]
+    # 릴레이는 HIGH를 주면 꺼집니다.
+    GPIO.output(pump_pin, GPIO.HIGH)
+    print(f" -> waterPump 10초 가동 후 자동 종료. (GPIO {pump_pin})")
 
 # --- MQTT 콜백 함수 ---
 def on_connect(client, userdata, flags, rc):
@@ -80,42 +79,48 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     """서버로부터 메시지를 받았을 때 실행되는 콜백 함수"""
-	try:
-		topic = msg.topic
-		payload = msg.payload.decode()
-		print(f"\n--- Received command from Server ---")
-		print(f"Topic: '{topic}', Payload: {payload}")
+    try:
+        topic = msg.topic
+        payload = msg.payload.decode()
+        print(f"\n--- Received command from Server ---")
+        print(f"Topic: '{topic}', Payload: {payload}")
 
         # JSON 페이로드 파싱
-		data = json.loads(payload)
-		command = data.get("command")
+        data = json.loads(payload)
+        command = data.get("command")
         
         # 토픽에서 모듈 이름 추출
-		module_name = topic.split('/')[-1]
+        module_name = topic.split('/')[-1]
 
         # 명령어에 따라 GPIO 핀 제어
-		if module_name in MODULE_PINS:
-			pin = MODULE_PINS[module_name]
-			if module_name == "waterPump":
-				if command == "on":
-					GPIO.output(pin, GPIO.HIGH)
-					print(f" -> waterPump module active. (GPIO {pin})")
-					pump_timer = threading.Timer(1, turn_off_pump_after_time)
-					pump_timer.start()
-            		else:
-				if command == "on":
-                			GPIO.output(pin, GPIO.HIGH)
-                			print(f" -> {module_name} 모듈이 활성화되었습니다. (GPIO {pin})")
-            			elif command == "off":
-                			GPIO.output(pin, GPIO.LOW)
-                			print(f" -> {module_name} 모듈이 비활성화되었습니다. (GPIO {pin})")
-            			else:
-                			print(f" -> 알 수 없는 명령: {command}")
-        	else:
-			print(f" -> 알 수 없는 모듈: {module_name}")
+        if module_name in MODULE_PINS:
+            pin = MODULE_PINS[module_name]
 
-	except Exception as e:
-		print(f"Error processing MQTT message: {e}")
+            if module_name == "waterPump":
+                if command == "on":
+                    # 릴레이는 LOW를 주면 켜집니다.
+                    GPIO.output(pin, GPIO.LOW)
+                    print(f" -> waterPump 모듈 활성화. (GPIO {pin})")
+                    # 10초 후 turn_off_pump_after_time 함수를 실행하는 타이머 시작
+                    pump_timer = threading.Timer(10, turn_off_pump_after_time)
+                    pump_timer.start()
+                elif command == "off":
+                    GPIO.output(pin, GPIO.HIGH)
+                    print(f" -> waterPump 모듈 비활성화. (GPIO {pin})")
+
+            elif command == "on":
+                GPIO.output(pin, GPIO.LOW)
+                print(f" -> {module_name} 모듈이 활성화되었습니다. (GPIO {pin})")
+            elif command == "off":
+                GPIO.output(pin, GPIO.HIGH)
+                print(f" -> {module_name} 모듈이 비활성화되었습니다. (GPIO {pin})")
+            else:
+                print(f" -> 알 수 없는 명령: {command}")
+        else:
+            print(f" -> 알 수 없는 모듈: {module_name}")
+
+    except Exception as e:
+        print(f"Error processing MQTT message: {e}")
 
 # --- 센서 데이터 함수 ---
 def get_sht31d_data(sensor_obj):
@@ -241,7 +246,7 @@ if __name__ == "__main__":
         if 'ser' in locals() and ser.is_open:
             ser.close()
             print("Serial port closed.")
-        
+            
         client.loop_stop()
         client.disconnect()
         print("MQTT client disconnected.")
