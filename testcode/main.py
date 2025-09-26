@@ -16,16 +16,16 @@ import RPi.GPIO as GPIO
 
 # --- Configuration ---
 # Farm and Camera Info
-BUCKET_NAME = ""
+BUCKET_NAME = "datafarm-picture"
 DEVICE_ID = "raspi-01"
 FARM_ID = "farm01"
 CAMERA_ID = "cam01"
 
 # MQTT Broker Info
 MQTT_BROKER_HOSTNAME = ""
-MQTT_BROKER_PORT = 1883
-MQTT_CONTROL_TOPIC = "farm/raspi-01/camera-command"
-MQTT_MODULE_CONTROL_TOPIC = f"farm/{DEVICE_ID}/#"
+MQTT_BROKER_PORT = 
+MQTT_CONTROL_TOPIC = ""
+MQTT_MODULE_CONTROL_TOPIC = f"
 MQTT_SENSOR_DATA_TOPIC = ""
 
 # Hardware Configuration
@@ -105,26 +105,26 @@ def capture_and_upload():
             picam2.start()
             time.sleep(2)
 
-            directory_path = "/home/pi/datafarm/picture"
+            directory_path = ""
             os.makedirs(directory_path, exist_ok=True)
             next_id = get_next_id()
-            file_name = f"{FARM_ID}_{CAMERA_ID}_{next_id}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.jpg"
+            file_name = f""
             file_path = os.path.join(directory_path, file_name)
 
             picam2.capture_file(file_path)
             print(f"Photo successfully taken and saved locally: {file_path}")
 
-            print(f"Uploading photo to GCS bucket '{BUCKET_NAME}'...")
+            print("")
             client = storage.Client()
             bucket = client.bucket(BUCKET_NAME)
             blob = bucket.blob(file_name)
             blob.upload_from_filename(file_path)
 
-            public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{file_name}"
+            public_url = f"{BUCKET_NAME}/{file_name}"
             print(f"GCS upload successful, public URL: {public_url}")
 
-            mqtt_client.publish("photo/uploaded", public_url)
-            print(f"MQTT message published: Topic 'photo/uploaded', Payload '{public_url}'")
+            mqtt_client.publish("", public_url)
+            print(f"MQTT message published: Topic '', Payload '{public_url}'")
 
         except Exception as e:
             print(f"An error occurred during photo capture/upload: {e}", file=sys.stderr)
@@ -190,7 +190,7 @@ def turn_off_pump_after_time():
     """Turns off the water pump after a delay."""
     pump_pin = MODULE_PINS["waterPump"]
     GPIO.output(pump_pin, GPIO.LOW)
-    print(f" -> waterPump turned off automatically after 10 seconds. (GPIO {pump_pin})")
+    print(f" -> waterPump turned off automatically after 3 seconds. (GPIO {pump_pin})")
 
 def turn_off_heater_after_time():
     """Turns off the heater after a delay."""
