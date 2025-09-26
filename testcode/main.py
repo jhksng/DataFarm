@@ -155,7 +155,7 @@ def read_arduino_data(ser_obj):
             water_raw = float(sensor_values[1])
             
             soil_percentage = int(max(0, min(100, ((1023 - soil_raw) / 1023) * 100)))
-            water_percentage = int(max(0, min(100, (water_raw / 1023) * 100)))
+            water_percentage = int(water_raw)
             
             return soil_percentage, water_percentage
         else:
