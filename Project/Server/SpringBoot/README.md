@@ -5,10 +5,11 @@ DOWNLOAD
 <details>
   <summary>변경 내역</summary>
   <ul>
-  <li>카메라 기능</li> 
-  <li>센서 데이터 조회 기능</li>
-  <li>작물 정보 등록 기능</li>
-  <li>작물 정보 조회 및 선택 기능</li> 
+    <li>카메라 기능</li> 
+    <li>센서 데이터 조회 기능</li>
+    <li>작물 정보 등록 기능</li>
+    <li>작물 정보 조회 및 선택 기능</li> 
+    <li>테이블 추가 (crop_info, photo, sensor_data, module_status)</li>
   </ul>
 </details>
 
