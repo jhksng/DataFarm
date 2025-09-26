@@ -8,10 +8,26 @@ unsigned long ReadTime = 0;
 float soil_arr[6];
 float water_arr[6];
 
+const int soilDry = 1023;
+const int soilWet = 300;
+const int waterDry = 300;
+const int waterWet = 1023;
+
 void setup(){
 	Serial.begin(9600);
-	pinMode(A0, INPUT);
-	pinMode(A1, INPUT);
+	pinMode(soil_pin, INPUT);
+	pinMode(water_pin, INPUT);
+}
+
+float calcPercent(int sensorValue, int dryVal, int wetVal, bool invert = false){
+	float val; 
+	if(invert)
+		val = (float)(dryVal - sensorValue) * 100.0 /(dryVal - wetVal);
+	else
+		val = (float)(sensorValue - dryVal) * 100.0 / (wetVal - dryVal);
+	if (val > 100) val = 100;
+	if (val <0 ) val =0;
+	return val;
 }
 
 void loop(){
@@ -22,8 +38,8 @@ void loop(){
 		int soil_v = analogRead(soil_pin);
 		int water_v = analogRead(water_pin);
 
-		soil_arr[count] = (float)soil_v;
-		water_arr[count] = (float)water_v;
+		soil_arr[count] = calcPercent(soil_v, soilDry ,soilWet, true);
+		water_arr[count] = calcPercent(water_v,waterDry,waterWet, false);
 		count++;
 
 		if(count >= 6)
