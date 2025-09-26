@@ -55,7 +55,7 @@
                 <li>Design: Figma</li>
             </ul>
         </li>
-        <li><b>Collaboration & Tools</b>:
+        <li><b>Tools</b>:
             <ul>
                 <li>Tools: Git, GitHub, Discord, Notion</li>
             </ul>
