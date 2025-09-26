@@ -92,7 +92,7 @@
     <li><b>전원 공급 장치</b>
         <ul>
             <li>SMPS (12v)</li>
-            <li>DC/DC 변환 컨버터 12V to 5V</li>
+            <li>DC/DC 변환 컨버터 (12V to 5V)</li>
         </ul>
     </li>
     <li><b>기타 하드웨어</b>
