@@ -3,7 +3,7 @@ DOWNLOAD
 </a>
 <br>
 <details>
-  <summary>UPDATE</summary>
+  <summary>변경 내역</summary>
   <ul>
   <li>카메라 기능</li> 
   <li>센서 데이터 조회 기능</li>
