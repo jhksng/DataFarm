@@ -64,29 +64,43 @@
 
 <h2>하드웨어 구조</h2>
 
-<b>하드웨어 1</b>
 <ul>
-  <li>RPi4 2gb</li>
-  <li>RPi4 4gb</li>
-  <li>온습도 센서</li>
-  <li>카메라 모듈</li>
-</ul>
-
-<b>하드웨어 2</b>
-<ul>
-  <li>Arduino</li>
-  <li>토양 습도 감지 센서</li>
-  <li>수위 센서</li>
-  <li>워터 펌프 모듈</li>
-</ul>
-
-<b>하드웨어 3</b>
-<ul>
-  <li>열 전구</li>
-  <li>쿨러</li>
-  <li>화분</li>
-  <li>LED 식물 생장등</li>
-  <li>실리콘 관</li>
+    <li><b>메인 컨트롤러 및 센서 모듈</b>
+        <ul>
+            <li>Raspberry Pi 4 (4GB)
+                <ul>
+                    <li>온습도 센서(SHT31)</li>
+                    <li>카메라 모듈(Pi Camera Module 3)</li>
+                </ul>
+            </li>
+            <li>Arduino
+                <ul>
+                    <li>토양 습도 감지 센서</li>
+                    <li>수위 감지 센서</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li><b>환경 제어 시스템</b>
+        <ul>
+            <li>워터 펌프 모듈</li>
+            <li>LED 식물 생장등</li>
+            <li>PTC 히터</li>
+            <li>쿨러 (2개)</li>
+        </ul>
+    </li>
+    <li><b>전원 공급 장치</b>
+        <ul>
+            <li>SMPS</li>
+        </ul>
+    </li>
+    <li><b>기타 하드웨어</b>
+        <ul>
+            <li>화분</li>
+            <li>실리콘 관</li>
+            <li>아크릴판</li>
+        </ul>
+    </li>
 </ul>
 
 <h2>기능</h2>
