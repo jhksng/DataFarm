@@ -13,6 +13,6 @@ DOWNLOAD
   </ul>
 </details>
 
-![Uploading v0.0.1_index.jpg…]()
+
 
 
