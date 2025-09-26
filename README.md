@@ -83,15 +83,16 @@
     </li>
     <li><b>환경 제어 시스템</b>
         <ul>
-            <li>워터 펌프 모듈</li>
-            <li>LED 식물 생장등</li>
-            <li>PTC 히터</li>
-            <li>쿨러 (2개)</li>
+            <li>워터 펌프 모듈 (5v)</li>
+            <li>LED 식물 생장등 (5v)</li>
+            <li>PTC 히터 (12v)</li>
+            <li>쿨러x2 (12v)</li>
         </ul>
     </li>
     <li><b>전원 공급 장치</b>
         <ul>
-            <li>SMPS</li>
+            <li>SMPS (12v)</li>
+            <li>DC/DC 변환 컨버터 12V to 5V</li>
         </ul>
     </li>
     <li><b>기타 하드웨어</b>
