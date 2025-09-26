@@ -1,5 +1,7 @@
 <h2>pip install</h2>
-
+<details>
+  <summary>ddd</summary>
+</details>
 RPi.GPIO
 paho-mqtt - 브로커
 picamera2 -카메라
