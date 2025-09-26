@@ -14,21 +14,20 @@ import board
 import adafruit_sht31d
 import RPi.GPIO as GPIO
 
-# --- Configuration ---
-# Farm and Camera Info
-BUCKET_NAME = "datafarm-picture"
-DEVICE_ID = "raspi-01"
-FARM_ID = "farm01"
-CAMERA_ID = "cam01"
+# conf
+BUCKET_NAME = ""
+DEVICE_ID = ""
+FARM_ID = ""
+CAMERA_ID = ""
 
 # MQTT Broker Info
 MQTT_BROKER_HOSTNAME = ""
 MQTT_BROKER_PORT = 
 MQTT_CONTROL_TOPIC = ""
-MQTT_MODULE_CONTROL_TOPIC = f"
+MQTT_MODULE_CONTROL_TOPIC = ""
 MQTT_SENSOR_DATA_TOPIC = ""
 
-# Hardware Configuration
+
 # Raspberry Pi Camera
 picam2 = Picamera2()
 camera_config = picam2.create_still_configuration(main={"size": (4056, 3040)})
