@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 
-# 사용할 GPIO 핀 번호 리스트
+# 사용할 GPIO 핀 번호 리스트 [워터펌프, LED, 히터, 쿨러A, 쿨러B]
 RELAY_PINS = [5, 6, 13, 19, 26]
 
 # GPIO 핀 모드 설정 (BCM 모드)
@@ -11,22 +11,16 @@ GPIO.setmode(GPIO.BCM)
 for pin in RELAY_PINS:
     GPIO.setup(pin, GPIO.OUT)
 
+# 릴레이 모듈을 사용해서 LOW 일 때 ON
 def set_pin_state(pin, state):
-    """
-    주어진 핀 번호와 상태에 따라 릴레이를 제어합니다.
-    (대부분의 릴레이 모듈은 Low 신호에서 ON 되기 때문에 HIGH/LOW를 반대로 적용합니다.)
-    """
-    if state == 1: # 켜기
+    if state == 1: # ON
         GPIO.output(pin, GPIO.LOW)
-        print(f"✅ GPIO {pin} 핀을 켰습니다.")
-    elif state == 0: # 끄기
+        print(f"GPIO {pin} PIN ON")
+    elif state == 0: # OFF
         GPIO.output(pin, GPIO.HIGH)
-        print(f"❌ GPIO {pin} 핀을 껐습니다.")
+        print(f"GPIO {pin} PIN OFF")
 
 def main():
-    """
-    사용자의 입력을 받아 핀 상태를 제어하는 메인 함수
-    """
     try:
         # 모든 핀을 초기 상태(꺼짐)로 설정
         print("모든 릴레이 핀을 초기화합니다.")
