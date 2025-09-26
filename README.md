@@ -29,15 +29,38 @@
 
 <h2>개발 환경</h2>
 <b>
+
 <ul>
- <li>Front-end : HTML, CSS</li>
-  <li>Back-end : Flask, Python</li>
-  <li>Database : MariaDB </li>
-  <li>Design : Figma </li>
-  <li>Operating system : Linux</li>
-  <li>Tools : Discord, Github, Notion</li>
-</ul>
-</b>
+        <li><b>Back-end Server</b>: Spring Boot (Java)
+            <ul>
+                <li>Server OS: Google Compute Engine (<b>Linux (Debian)</b>)</li>
+            </ul>
+        </li>
+        <li><b>Database & Storage</b>:
+            <ul>
+                <li>Database: <b>Google Cloud SQL (MySQL)</b></li>
+                <li>File Storage: Google Cloud Storage (사진, 로그)</li>
+            </ul>
+        </li>
+        <li><b>IoT & Communication</b>:
+            <ul>
+                <li>IoT Device: Raspberry Pi</li>
+                <li>IoT Device OS: <b>Raspberry Pi OS (Linux)</b></li>
+                <li>Protocol: <b>MQTT</b></li>
+            </ul>
+        </li>
+        <li><b>Front-end & Design</b>:
+            <ul>
+                <li>Front-end: HTML, CSS</li>
+                <li>Design: Figma</li>
+            </ul>
+        </li>
+        <li><b>Collaboration & Tools</b>:
+            <ul>
+                <li>Tools: Git, GitHub, Discord, Notion</li>
+            </ul>
+        </li>
+    </ul>
 
 <h2>하드웨어 구조</h2>
 
