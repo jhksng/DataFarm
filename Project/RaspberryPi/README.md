@@ -1,6 +1,7 @@
 <h2>pip install</h2>
 <details>
   <summary>ddd</summary>
+  dld
 </details>
 RPi.GPIO
 paho-mqtt - 브로커
