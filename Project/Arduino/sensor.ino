@@ -1,24 +1,27 @@
+// 고정 값
 const int soil_pin = A0;
 const int water_pin = A1;
 const long time = 10000; //10 sec
 
+// 토양 습도 센서의 경우 습도가 높으면 아날로그 값이 낮아짐, 수위 감지 센서는 반대
+const int soilDry = 1023;
+const int soilWet = 300;
+const int waterDry = 300;
+const int waterWet = 1023;
+
+// 10초 마다 체크 count, 시간 ReadTime
 int count = 0;
 unsigned long ReadTime = 0;
 
 float soil_arr[6];
 float water_arr[6];
 
-const int soilDry = 1023;
-const int soilWet = 300;
-const int waterDry = 300;
-const int waterWet = 1023;
-
 void setup(){
 	Serial.begin(9600);
 	pinMode(soil_pin, INPUT);
 	pinMode(water_pin, INPUT);
 }
-
+// invert :1 soil , 0 water 
 float calcPercent(int sensorValue, int dryVal, int wetVal, bool invert = false){
 	float val; 
 	if(invert)
@@ -26,7 +29,7 @@ float calcPercent(int sensorValue, int dryVal, int wetVal, bool invert = false){
 	else
 		val = (float)(sensorValue - dryVal) * 100.0 / (wetVal - dryVal);
 	if (val > 100) val = 100;
-	if (val <0 ) val =0;
+	if (val <0 ) val = 0;
 	return val;
 }
 
