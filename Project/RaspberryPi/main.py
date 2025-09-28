@@ -152,9 +152,10 @@ def read_arduino_data(ser_obj):
         if len(sensor_values) == 2:
             soil_raw = float(sensor_values[0])
             water_raw = float(sensor_values[1])
-            
-            soil_percentage = int(max(0, min(100, ((1023 - soil_raw) / 1023) * 100)))
-            water_percentage = int(water_raw)
+
+            // 0929.12.25 수정 기존 코드는 아두이노에서 백분율 작업을 완료한 값을 다시 백분율 작업을 시도해 값이 이상해짐, 수위 감지 값 보정
+            soil_percentage = soil_raw
+            water_percentage = water_raw* 2.0
             
             return soil_percentage, water_percentage
         else:
