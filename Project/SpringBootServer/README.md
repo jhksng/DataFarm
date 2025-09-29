@@ -67,22 +67,42 @@ th {
   <tbody>
     <tr>
       <td>99</td>
-      <td>98</td>
-      <td>97</td>
-      <td>96</td>
-      <td>95</td>
-      <td>94</td>
-      <td>93</td>
+      <td>3</td>
     </tr>
     <tr>
-      <td>3</td>
+      <td>98</td>
       <td>13</td>
-      <td>23</td>
-      <td>33</td>
-      <td>44</td>
-      <td>54</td>
-      <td>64</td>
+      
     </tr>
+     <tr>
+      <td>97</td>
+      <td>23</td>
+    
+    </tr>
+     <tr>
+     
+      <td>96</td>
+      <td>33</td>
+    
+    </tr>
+     <tr>
+      <td>95</td>
+     
+      <td>44</td>
+     
+    </tr>
+     <tr>
+      <td>94</td>
+     
+      <td>54</td>
+     
+    </tr>
+
+  <tr>
+    <td>93</td>
+    <td>64</td>
+  </tr>
+     
  </tbody>
 </table>
 
