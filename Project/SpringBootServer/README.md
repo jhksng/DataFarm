@@ -33,37 +33,7 @@ DOWNLOAD</a>
       <td>dd</td>
     </tr>
     <li>
-      99 = 3, 98 = 13, 97 = 23, 96 = 33, 95 = 44, 94 = 54, 93 = 64
-    </li>
-  </ul>
-</details>
-
-Here's a concise HTML code example for creating a basic table with <tr>, <td>, and <th> elements.
-
-HTML
-
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background-color: #f2f2f2;
-}
-</style>
-</head>
-<body>
-
-<h2>기본 HTML 테이블</h2>
-
-<table>
+     <table>
   <tbody>
     <tr>
       <td>99</td>
@@ -95,6 +65,36 @@ th {
     </tr>
  </tbody>
 </table>
+    </li>
+  </ul>
+</details>
+
+Here's a concise HTML code example for creating a basic table with <tr>, <td>, and <th> elements.
+
+HTML
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background-color: #f2f2f2;
+}
+</style>
+</head>
+<body>
+
+<h2>기본 HTML 테이블</h2>
+
+
 
 
 
