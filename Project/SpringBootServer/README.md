@@ -38,6 +38,57 @@ DOWNLOAD</a>
   </ul>
 </details>
 
+Here's a concise HTML code example for creating a basic table with <tr>, <td>, and <th> elements.
+
+HTML
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background-color: #f2f2f2;
+}
+</style>
+</head>
+<body>
+
+<h2>기본 HTML 테이블</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>헤더 1</th>
+      <th>헤더 2</th>
+      <th>헤더 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>내용 1-1</td>
+      <td>내용 1-2</td>
+      <td>내용 1-3</td>
+    </tr>
+    <tr>
+      <td>내용 2-1</td>
+      <td>내용 2-2</td>
+      <td>내용 2-3</td>
+    </tr>
+    <tr>
+      <td>내용 3-1</td>
+      <td>내용 3-2</td>
+      <td>내용 3-3</td>
+    </tr>
+  </tbody>
+</table>
 
 
 
