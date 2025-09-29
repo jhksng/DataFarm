@@ -12,7 +12,7 @@ DOWNLOAD</a>
   </ul>
 </details>
 
-v0.0.2<a href="https://drive.google.com/file/d/1VZNdCNHOtx-OIkrr6g3m89TfFNrgPzSz/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
+v0.0.2<a href="https://drive.google.com/file/d/1h02hCvxCivTj3eiani_UVQzI1xliGZ5L/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
 DOWNLOAD</a>
 <details>
   <summary>변경 내역-250929</summary>
