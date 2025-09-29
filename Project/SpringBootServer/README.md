@@ -72,37 +72,27 @@ th {
     <tr>
       <td>98</td>
       <td>13</td>
-      
     </tr>
      <tr>
       <td>97</td>
       <td>23</td>
-    
     </tr>
      <tr>
-     
       <td>96</td>
       <td>33</td>
-    
     </tr>
      <tr>
       <td>95</td>
-     
       <td>44</td>
-     
     </tr>
      <tr>
       <td>94</td>
-     
       <td>54</td>
-     
     </tr>
-
-  <tr>
-    <td>93</td>
-    <td>64</td>
-  </tr>
-     
+    <tr>
+      <td>93</td>
+      <td>64</td>
+    </tr>
  </tbody>
 </table>
 
