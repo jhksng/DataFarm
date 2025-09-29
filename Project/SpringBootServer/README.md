@@ -15,7 +15,7 @@ DOWNLOAD</a>
 v0.0.2<a href="https://drive.google.com/file/d/1h02hCvxCivTj3eiani_UVQzI1xliGZ5L/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
 DOWNLOAD</a>
 <details>
-  <summary>변경 내역-250929</summary>
+  <summary>변경 내역_250929</summary>
   <ul>
     <li>센서 데이터 가장 최근 값 조회 및 페이지 구분</li> 
     <li>라즈베리파이 토양 습도 코드 수정 및 수위 감지 값 보정</li>
