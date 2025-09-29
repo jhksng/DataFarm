@@ -18,7 +18,8 @@ DOWNLOAD
     </li>
   </ul>
 </details>
-v0.0.2
+v0.0.2<a href="https://drive.google.com/file/d/1VZNdCNHOtx-OIkrr6g3m89TfFNrgPzSz/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
+DOWNLOAD
 <details>
   <summary>변경 내역</summary>
   <ul>
