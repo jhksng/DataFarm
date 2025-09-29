@@ -18,6 +18,7 @@ DOWNLOAD</a>
   <summary>변경 내역_250929</summary>
   <ul>
     <li>센서 데이터 가장 최근 값 조회 및 페이지 구분</li> 
+    <li>히터 2분 동작, 5분 쿨/ 워터 펌프 5초 동작, 24시간 쿨</li>
     <li>라즈베리파이 토양 습도 코드 수정 및 수위 감지 값 보정</li>
     <li>잘 못 입력 된 값 soil_percentage = int(max(0, min(100, ((1023 - soil_raw) / 1023) * 100)))</li>
     <li>db에 저장 된 수치 = int(max(0, min(100, ((1023 - soil_raw) / 1023) * 100))) 를 재계산 하여 db에 수정 작업</li>
