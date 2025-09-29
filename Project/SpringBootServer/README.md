@@ -64,7 +64,7 @@ th {
 <h2>기본 HTML 테이블</h2>
 
 <table>
-
+  <tbody>
     <tr>
       <td>내용 1-1</td>
       <td>내용 1-2</td>
@@ -80,7 +80,7 @@ th {
       <td>내용 3-2</td>
       <td>내용 3-3</td>
     </tr>
- 
+ </tbody>
 </table>
 
 
