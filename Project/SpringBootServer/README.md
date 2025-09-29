@@ -66,19 +66,22 @@ th {
 <table>
   <tbody>
     <tr>
-      <td>내용 1-1</td>
-      <td>내용 1-2</td>
-      <td>내용 1-3</td>
+      <td>99</td>
+      <td>98</td>
+      <td>97</td>
+      <td>96</td>
+      <td>95</td>
+      <td>94</td>
+      <td>93</td>
     </tr>
     <tr>
-      <td>내용 2-1</td>
-      <td>내용 2-2</td>
-      <td>내용 2-3</td>
-    </tr>
-    <tr>
-      <td>내용 3-1</td>
-      <td>내용 3-2</td>
-      <td>내용 3-3</td>
+      <td>3</td>
+      <td>13</td>
+      <td>23</td>
+      <td>33</td>
+      <td>44</td>
+      <td>54</td>
+      <td>64</td>
     </tr>
  </tbody>
 </table>
