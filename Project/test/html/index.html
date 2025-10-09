@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트팜 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+<header class="bg-white shadow-md">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-green-700">스마트팜</h1>
+        <div class="space-x-4">
+            <a href="/show_sensor_data" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300">
+                센서 데이터 조회
+            </a>
+            <a href="/settings" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300">
+                작물 셋팅
+            </a>
+            <a href="/show_settings" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300">
+                작물 셋팅값 조회
+            </a>
+            <a href="/camera" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300">
+                카메라 제어
+            </a>
+        </div>
+    </nav>
+</header>
+
+<main class="flex-grow flex flex-col items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">환영합니다!</h2>
+        <p class="text-gray-600 mb-6">스마트팜 관리 시스템입니다.</p>
+        <p class="text-gray-600 mb-6">위 내비게이션 바를 통해 원하는 페이지로 이동하세요.</p>
+    </div>
+</main>
+
+</body>
+</html>
