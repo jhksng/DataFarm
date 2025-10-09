@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>센서 데이터</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { text-align: center; color: #333; }
+        .latest-data { margin-bottom: 40px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .latest-data h3 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .pagination { text-align: center; margin-top: 20px; }
+        .pagination a { padding: 8px 16px; text-decoration: none; border: 1px solid #ddd; margin: 0 4px; }
+        .pagination a.active { background-color: #4CAF50; color: white; border: 1px solid #4CAF50; }
+        .pagination a:hover:not(.active) { background-color: #ddd; }
+    </style>
+</head>
+<body>
+
+<h2>최근 센서 데이터</h2>
+
+<div class="latest-data" th:if="${latestSensorData}">
+    <h3>가장 최신 값</h3>
+    <p><strong>시간:</strong> <span th:text="${#temporals.format(latestSensorData.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+    <p><strong>온도:</strong> <span th:text="${latestSensorData.temperature}"></span>°C</p>
+    <p><strong>습도:</strong> <span th:text="${latestSensorData.humidity}"></span>%</p>
+    <p><strong>토양습도:</strong> <span th:text="${latestSensorData.soilMoisture}"></span>%</p>
+    <p><strong>물 수위:</strong> <span th:text="${latestSensorData.waterLevel}"></span></p>
+</div>
+<div th:unless="${latestSensorData}">
+    <p>⚠️ 아직 센서 데이터가 없습니다.</p>
+</div>
+
+<h2>전체 센서 기록</h2>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>장치 ID</th>
+        <th>온도 (°C)</th>
+        <th>습도 (%)</th>
+        <th>토양습도 (%)</th>
+        <th>물 수위</th>
+        <th>시간</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="data : ${sensorDataList}">
+        <td th:text="${data.id}"></td>
+        <td th:text="${data.raspberryId}"></td>
+        <td th:text="${data.temperature}"></td>
+        <td th:text="${data.humidity}"></td>
+        <td th:text="${data.soilMoisture}"></td>
+        <td th:text="${data.waterLevel}"></td>
+        <td th:text="${#temporals.format(data.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+    </tr>
+    <tr th:if="${sensorDataList.isEmpty()}">
+        <td colspan="7">데이터가 없습니다.</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="pagination">
+    <a th:if="${currentPage > 0}" th:href="@{/show_sensor_data(page=${currentPage - 1})}">&laquo; 이전</a>
+
+    <span th:if="${totalPages > 0}">
+        <th:block th:with="startPage=${T(java.lang.Math).max(0, currentPage - 5)}, endPage=${T(java.lang.Math).min(totalPages - 1, currentPage + 5)}">
+            <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <a th:href="@{/show_sensor_data(page=${i})}" th:text="${i + 1}"
+                   th:classappend="${i == currentPage} ? 'active' : ''"></a>
+            </th:block>
+        </th:block>
+    </span>
+
+    <a th:if="${currentPage < totalPages - 1}" th:href="@{/show_sensor_data(page=${currentPage + 1})}">다음 &raquo;</a>
+</div>
+
+</body>
+</html>
