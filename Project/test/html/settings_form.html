@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>작물 설정 입력</title>
+</head>
+<body>
+<h2>작물 환경 설정</h2>
+<form action="/save_settings" method="post">
+    <div><label for="crop">작물 이름:</label><input type="text" id="crop" name="crop" required></div>
+    <div><label for="targetTemp">목표 온도 (°C):</label><input type="number" step="0.1" id="targetTemp" name="targetTemp" required></div>
+    <div><label for="targetHumi">목표 습도 (%):</label><input type="number" step="0.1" id="targetHumi" name="targetHumi" required></div>
+    <div><label for="targetSoil">목표 토양습도 (%):</label><input type="number" step="0.1" id="targetSoil" name="targetSoil" required></div>
+    <div><label for="targetLight">목표 조도시간 (시간):</label><input type="number" step="0.1" id="targetLight" name="targetLight" required></div>
+    <div><label for="harvestDays">예상 수확일 (며칠 후):</label><input type="number" id="harvestDays" name="harvestDays"></div>
+    <input type="submit" value="설정 저장">
+</form>
+</body>
+</html>
