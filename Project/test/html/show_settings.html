@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>저장된 작물 설정</title>
+    <style>
+        .active-crop {
+            background-color: #e0f7fa; /* 활성화된 작물의 배경색을 변경하여 강조 */
+            font-weight: bold;
+        }
+        .message {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h2>저장된 작물 설정</h2>
+
+<p th:if="${message}" class="message" th:text="${message}"></p>
+<p th:if="${error}" class="error" th:text="${error}"></p>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>작물 이름</th>
+        <th>온도</th>
+        <th>습도</th>
+        <th>토양습도</th>
+        <th>조도시간</th>
+        <th>수확일</th>
+        <th>상태</th>
+        <th>액션</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="crop : ${crops}" th:class="${crop.isActive} ? 'active-crop' : ''">
+        <td th:text="${crop.crop}"></td>
+        <td th:text="${crop.targetTemp}"></td>
+        <td th:text="${crop.targetHumi}"></td>
+        <td th:text="${crop.targetSoil}"></td>
+        <td th:text="${crop.targetLight}"></td>
+        <td th:text="${crop.harvestDate != null ? #dates.format(crop.harvestDate, 'yyyy-MM-dd') : 'N/A'}"></td>
+        <td>
+            <span th:if="${crop.isActive}">✅ 활성화됨</span>
+            <span th:unless="${crop.isActive}">❌ 비활성화됨</span>
+        </td>
+        <td>
+            <form th:if="${!crop.isActive}" th:action="@{/activate_crop/{cropName}(cropName=${crop.crop})}" method="post">
+                <button type="submit">이 작물 활성화</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<br/>
+<a href="/settings">새로운 설정 추가하기</a>
+</body>
+</html>
