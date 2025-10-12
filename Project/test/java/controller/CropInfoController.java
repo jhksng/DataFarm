@@ -1,7 +1,6 @@
 package com.smartfarm.smartfarm_server.controller;
 
 import com.smartfarm.smartfarm_server.model.CropInfo;
-import com.smartfarm.smartfarm_server.model.SensorData;
 import com.smartfarm.smartfarm_server.repository.CropInfoRepository;
 import com.smartfarm.smartfarm_server.repository.SensorDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
