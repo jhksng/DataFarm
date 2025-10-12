@@ -2,80 +2,102 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>센서 데이터</title>
+    <title>센서 데이터 현황 - 스마트팜 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h2 { text-align: center; color: #333; }
-        .latest-data { margin-bottom: 40px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        .latest-data h3 { margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .pagination { text-align: center; margin-top: 20px; }
-        .pagination a { padding: 8px 16px; text-decoration: none; border: 1px solid #ddd; margin: 0 4px; }
-        .pagination a.active { background-color: #4CAF50; color: white; border: 1px solid #4CAF50; }
-        .pagination a:hover:not(.active) { background-color: #ddd; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100">
 
-<h2>최근 센서 데이터</h2>
+<div class="flex h-screen">
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='sensor-data')}"></div>
 
-<div class="latest-data" th:if="${latestSensorData}">
-    <h3>가장 최신 값</h3>
-    <p><strong>시간:</strong> <span th:text="${#temporals.format(latestSensorData.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
-    <p><strong>온도:</strong> <span th:text="${latestSensorData.temperature}"></span>°C</p>
-    <p><strong>습도:</strong> <span th:text="${latestSensorData.humidity}"></span>%</p>
-    <p><strong>토양습도:</strong> <span th:text="${latestSensorData.soilMoisture}"></span>%</p>
-    <p><strong>물 수위:</strong> <span th:text="${latestSensorData.waterLevel}"></span></p>
-</div>
-<div th:unless="${latestSensorData}">
-    <p>⚠️ 아직 센서 데이터가 없습니다.</p>
-</div>
+    <main class="flex-1 p-8 overflow-y-auto">
+        <h2 class="text-3xl font-bold text-slate-800 mb-6">센서 데이터 현황</h2>
 
-<h2>전체 센서 기록</h2>
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>장치 ID</th>
-        <th>온도 (°C)</th>
-        <th>습도 (%)</th>
-        <th>토양습도 (%)</th>
-        <th>물 수위</th>
-        <th>시간</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="data : ${sensorDataList}">
-        <td th:text="${data.id}"></td>
-        <td th:text="${data.raspberryId}"></td>
-        <td th:text="${data.temperature}"></td>
-        <td th:text="${data.humidity}"></td>
-        <td th:text="${data.soilMoisture}"></td>
-        <td th:text="${data.waterLevel}"></td>
-        <td th:text="${#temporals.format(data.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
-    </tr>
-    <tr th:if="${sensorDataList.isEmpty()}">
-        <td colspan="7">데이터가 없습니다.</td>
-    </tr>
-    </tbody>
-</table>
+        <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-8">
+            <h3 class="text-xl font-semibold text-slate-700 mb-1">가장 최근 측정값</h3>
+            <div th:if="${latestSensorData}">
+                <p class="text-sm text-slate-500 mb-4">
+                    <strong>측정 시간:</strong> <span th:text="${#temporals.format(latestSensorData.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-red-50 p-4 rounded-lg"><p class="text-sm text-slate-500">온도</p><p class="text-2xl font-bold" th:text="${latestSensorData.temperature} + '°C'"></p></div>
+                    <div class="bg-sky-50 p-4 rounded-lg"><p class="text-sm text-slate-500">습도</p><p class="text-2xl font-bold" th:text="${latestSensorData.humidity} + '%'"></p></div>
+                    <div class="bg-amber-50 p-4 rounded-lg"><p class="text-sm text-slate-500">토양습도</p><p class="text-2xl font-bold" th:text="${latestSensorData.soilMoisture} + '%'"></p></div>
+                    <div class="bg-indigo-50 p-4 rounded-lg"><p class="text-sm text-slate-500">물 수위</p><p class="text-2xl font-bold" th:text="${latestSensorData.waterLevel}"></p></div>
+                </div>
+            </div>
+            <div th:unless="${latestSensorData}" class="text-center text-gray-500 py-10">
+                <p>최근 측정된 데이터가 없습니다.</p>
+            </div>
+        </div>
 
-<div class="pagination">
-    <a th:if="${currentPage > 0}" th:href="@{/show_sensor_data(page=${currentPage - 1})}">&laquo; 이전</a>
-
-    <span th:if="${totalPages > 0}">
-        <th:block th:with="startPage=${T(java.lang.Math).max(0, currentPage - 5)}, endPage=${T(java.lang.Math).min(totalPages - 1, currentPage + 5)}">
-            <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
-                <a th:href="@{/show_sensor_data(page=${i})}" th:text="${i + 1}"
-                   th:classappend="${i == currentPage} ? 'active' : ''"></a>
-            </th:block>
-        </th:block>
-    </span>
-
-    <a th:if="${currentPage < totalPages - 1}" th:href="@{/show_sensor_data(page=${currentPage + 1})}">다음 &raquo;</a>
+        <div class="bg-white rounded-xl shadow-md border border-slate-200">
+            <div class="p-6 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-700">실시간 모니터링 그래프</h3>
+            </div>
+            <div class="p-6">
+                <canvas id="sensorChart"></canvas>
+            </div>
+        </div>
+    </main>
 </div>
 
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 페이지가 로드되면 '/api/sensor-data/recent' API를 호출합니다.
+        fetch('/api/sensor-data/recent')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('서버에서 데이터를 가져오지 못했습니다.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || data.length === 0) {
+                    console.log("그래프를 그릴 데이터가 없습니다.");
+                    return;
+                }
+
+                // API는 최신순(내림차순)으로 데이터를 보내주므로, 그래프에 시간순(오름차순)으로 그리려면 배열을 뒤집어야 합니다.
+                data.reverse();
+
+                const labels = data.map(d => new Date(d.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }));
+                const temperatures = data.map(d => d.temperature);
+                const humidities = data.map(d => d.humidity);
+                const soilMoistures = data.map(d => d.soilMoisture);
+                const waterLevels = data.map(d => d.waterLevel);
+
+                const ctx = document.getElementById('sensorChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: '온도 (°C)', data: temperatures, borderColor: 'rgba(239, 68, 68, 1)', tension: 0.1, pointRadius: 2, pointHoverRadius: 5, pointHitRadius: 10 },
+                            { label: '습도 (%)', data: humidities, borderColor: 'rgba(14, 165, 233, 1)', tension: 0.1, pointRadius: 2, pointHoverRadius: 5, pointHitRadius: 10 },
+                            { label: '토양습도 (%)', data: soilMoistures, borderColor: 'rgba(245, 158, 11, 1)', tension: 0.1, pointRadius: 2, pointHoverRadius: 5, pointHitRadius: 10 },
+                            { label: '물 수위', data: waterLevels, borderColor: 'rgba(99, 102, 241, 1)', tension: 0.1, pointRadius: 2, pointHoverRadius: 5, pointHitRadius: 10 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { title: { display: true, text: '시간' } },
+                            y: { title: { display: true, text: '값' } }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching chart data:', error));
+    });
+</script>
 </body>
 </html>
