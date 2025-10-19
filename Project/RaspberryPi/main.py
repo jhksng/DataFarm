@@ -231,7 +231,7 @@ def on_message(client, userdata, msg):
                 GPIO.output(pin, GPIO.HIGH)
                 print(f" -> {module_name} module activated. (GPIO {pin})")
                 if module_name == "waterPump":
-                    pump_timer = threading.Timer(5, turn_off_pump_after_time)
+                    pump_timer = threading.Timer(3, turn_off_pump_after_time)
                     pump_timer.start()
                 elif module_name == "heater":
                     heater_timer = threading.Timer(120, turn_off_heater_after_time)
