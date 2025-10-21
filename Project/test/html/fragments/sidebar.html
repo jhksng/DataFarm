@@ -18,9 +18,11 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         <div><p class="text-xs text-slate-400">총 가동시간</p><p class="text-lg font-bold">19:33</p></div>
     </div>
-    <nav class="space-y-2">
+   <nav class="space-y-2">
         <a th:href="@{/}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'dashboard'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>대시보드</span></a>
+        <a th:href="@{/module-status}" class="flex items-center gap-3 px-4 py-3 rounded-md"
+           th:classappend="${active == 'module-status'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>모듈 상태</span></a>
         <a th:href="@{/show_sensor_data}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'sensor-data'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>센서 데이터 현황</span></a>
         <a th:href="@{/sensor_history}" class="flex items-center gap-3 px-4 py-3 rounded-md"
@@ -63,4 +65,5 @@
 </script>
 
 </body>
+
 </html>
