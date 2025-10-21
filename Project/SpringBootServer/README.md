@@ -1,6 +1,5 @@
 v0.0.1<a href="https://drive.google.com/file/d/1VZNdCNHOtx-OIkrr6g3m89TfFNrgPzSz/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
 DOWNLOAD</a>
-
 <details>
   <summary>변경 내역</summary>
   <ul>
@@ -56,6 +55,17 @@ DOWNLOAD</a>
        </tbody>
       </table>
     </li>
+  </ul>
+</details>
+
+v0.0.3<a href="https://drive.google.com/file/d/1VZNdCNHOtx-OIkrr6g3m89TfFNrgPzSz/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
+DOWNLOAD</a>
+
+<details>
+  <summary>변경 내역</summary>
+  <ul>
+    <li>디자인 개선</li> 
+    <li>현재 모듈 상태, 카메라 페이지 추가</li>
   </ul>
 </details>
 
