@@ -29,8 +29,8 @@ public class DatabaseInitializer implements CommandLineRunner {
             lettuceInfo.setCrop("바질");
             lettuceInfo.setTargetTemp(26.0);
             lettuceInfo.setTargetHumi(70.0);
-            lettuceInfo.setTargetSoil(50.0);
-            lettuceInfo.setTargetLight(14.0);
+            lettuceInfo.setTargetSoil(40.0);
+            lettuceInfo.setTargetLight(8.0);
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
