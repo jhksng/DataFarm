@@ -64,7 +64,7 @@ v0.0.3<a href="https://drive.google.com/file/d/1wAckKSAeFsykQF9nEY01ykfZ-xCiKnp4
 DOWNLOAD</a>
 
 <details>
-  <summary>변경 내역</summary>
+  <summary>변경 내역_251022</summary>
   <ul>
     <li>디자인 개선</li> 
     <li>현재 모듈 상태, 카메라 페이지 추가</li>
