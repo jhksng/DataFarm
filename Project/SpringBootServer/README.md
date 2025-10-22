@@ -71,7 +71,15 @@ DOWNLOAD</a>
   </ul>
 </details>
 
+v0.0.4<a href="https://drive.google.com/file/d/1FfSMi29GZpCuLVnyQdQNZmS42H6zn_dv/view?usp=sharing" style="padding: 10px 20px; background-color: #4285F4; color: white; text-decoration: none; border-radius: 5px;">
+DOWNLOAD</a>
 
-
+<details>
+  <summary>변경 내역_251022</summary>
+  <ul>
+    <li>LED ON 혹은 사용자가 촬영 버튼을 눌렀을 때만 촬영하게 개선</li> 
+    <li>사진 촬영 후 openCV를 활용하여 식물 생장 수치 도출 후 사진 정보에 추가</li>
+  </ul>
+</details>
 
 
