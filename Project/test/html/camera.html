@@ -207,10 +207,32 @@
                 return { ...photo, signedUrl };
             });
 
-            const photosWithSignedUrls = await Promise.all(photoPromises);
+           const photosWithSignedUrls = await Promise.all(photoPromises);
 
             photosWithSignedUrls.forEach(photo => {
                 const imageUrl = photo.signedUrl !== 'error' ? photo.signedUrl : 'https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+로드+실패';
+
+                // --- 💡 변경사항 1: 사진 이름 처리 💡 ---
+                let filename = photo.photoUrl.split('/').pop();
+                if (filename.startsWith('farm01_cam01_')) {
+                    filename = filename.substring('farm01_cam01_'.length);
+                }
+
+                // --- 💡 변경사항 2: 생장 수치 값 처리 💡 ---
+                const brightnessRatio = photo.brightnessRatio !== null && photo.brightnessRatio !== undefined
+                                        ? parseFloat(photo.brightnessRatio).toFixed(4)
+                                        : 'N/A';
+
+                // --- 💡 변경사항 3: 시간 +9 시간 조정 💡 ---
+                // 1. photo.uploadDate 문자열을 Date 객체로 변환
+                const uploadDate = new Date(photo.uploadDate);
+                // 2. 9시간(9 * 60분 * 60초 * 1000밀리초)을 더함
+                // 이 방법은 photo.uploadDate가 서버의 로컬 시간이 아닌 UTC로 해석될 때, KST(UTC+9)로 표시하기 위해 사용됩니다.
+                const adjustedTime = new Date(uploadDate.getTime() + (9 * 60 * 60 * 1000));
+                // 3. 로컬 형식으로 표시
+                const formattedTime = adjustedTime.toLocaleString();
+
+
                 // 카드 스타일을 모듈 상태 현황 테이블 컨테이너 스타일과 유사하게 변경
                 const photoCard = `
                     <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow duration-200">
@@ -221,9 +243,10 @@
                                  onerror="this.src='https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+없음';">
                         </div>
                         <div class="text-slate-800">
-                            <h3 class="font-semibold text-lg truncate">${photo.photoUrl.split('/').pop()}</h3>
+                            <h3 class="font-semibold text-lg truncate">${filename}</h3>
                             <p class="text-sm text-slate-500 mt-1">작물: <span class="font-medium text-slate-700">${photo.cropName}</span></p>
-                            <p class="text-xs text-slate-400 mt-1">촬영 시각: ${new Date(photo.uploadDate).toLocaleString()}</p>
+                            <p class="text-sm text-slate-500">생장 수치 값: <span class="font-medium text-slate-700">${brightnessRatio}</span></p>
+                            <p class="text-xs text-slate-400 mt-1">촬영 시각: ${formattedTime}</p>
                         </div>
                     </div>
                 `;
