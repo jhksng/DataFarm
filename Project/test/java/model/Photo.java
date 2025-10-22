@@ -21,10 +21,12 @@ public class Photo {
 
     private LocalDateTime uploadDate;
 
+    // ✨ 새로 추가된 분석 수치값을 저장할 필드
+    private Float brightnessRatio;
+
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -51,6 +53,16 @@ public class Photo {
 
     public void setUploadDate(LocalDateTime uploadDate) {
         this.uploadDate = uploadDate;
+    }
+
+    // ✨ 새로 추가된 Getter
+    public Float getBrightnessRatio() {
+        return brightnessRatio;
+    }
+
+    // ✨ 새로 추가된 Setter
+    public void setBrightnessRatio(Float brightnessRatio) {
+        this.brightnessRatio = brightnessRatio;
     }
 
     public Photo() {}
