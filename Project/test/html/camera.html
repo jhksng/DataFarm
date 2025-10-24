@@ -243,9 +243,10 @@
                                  onerror="this.src='https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+없음';">
                         </div>
                         <div class="text-slate-800">
-                            <h3 class="font-semibold text-lg truncate">${photo.photoUrl.split('/').pop()}</h3>
+                            <h3 class="font-semibold text-lg truncate">${filename}</h3>
                             <p class="text-sm text-slate-500 mt-1">작물: <span class="font-medium text-slate-700">${photo.cropName}</span></p>
-                            <p class="text-xs text-slate-400 mt-1">촬영 시각: ${new Date(photo.uploadDate).toLocaleString()}</p>
+                            <p class="text-sm text-slate-500">생장 수치 값: <span class="font-medium text-slate-700">${brightnessRatio}</span></p>
+                            <p class="text-xs text-slate-400 mt-1">촬영 시각: ${formattedTime}</p>
                         </div>
                     </div>
                 `;
