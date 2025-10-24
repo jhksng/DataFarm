@@ -1,101 +1,131 @@
-package com.smartfarm.smartfarm_server.controller;
+package com.smartfarm.smartfarm_server.controller; // 패키지 경로 확인
 
-import com.smartfarm.smartfarm_server.model.SensorData;
-import com.smartfarm.smartfarm_server.repository.SensorDataRepository;
+import com.smartfarm.smartfarm_server.model.SensorData; // 모델 경로 확인
+import com.smartfarm.smartfarm_server.repository.SensorDataRepository; // 리포지토리 경로 확인
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-/**
- * 이 컨트롤러는 센서 데이터와 관련된 웹 페이지를 반환하는 역할을 합니다.
- * 사용자가 특정 URL로 접속하면, 이 컨트롤러의 메소드가 실행되어 해당하는 HTML 파일을 보여줍니다.
- */
 @Controller
 public class SensorDataController {
 
-    // final 키워드를 사용하여 SensorDataRepository가 변경되지 않도록 합니다.
-    // 생성자를 통해 의존성을 주입받습니다 (Dependency Injection).
     private final SensorDataRepository sensorDataRepository;
 
+    @Autowired
     public SensorDataController(SensorDataRepository sensorDataRepository) {
         this.sensorDataRepository = sensorDataRepository;
     }
 
-    /**
-     * '센서 데이터 현황' 페이지를 처리하는 메소드입니다. (최신값 카드 + 그래프 표시)
-     * 사용자가 "/show_sensor_data" URL로 GET 요청을 보내면 이 메소드가 호출됩니다.
-     * @param model 뷰(HTML)에 데이터를 전달하기 위한 Spring 객체
-     * @return "show_sensor_data" 라는 이름의 HTML 템플릿을 반환합니다. (templates/show_sensor_data.html)
-     */
     @GetMapping("/show_sensor_data")
     public String showSensorData(Model model) {
-
         Optional<SensorData> latestData = sensorDataRepository.findTopByOrderByTimestampDesc();
         latestData.ifPresent(data -> model.addAttribute("latestSensorData", data));
-        return "show_sensor_data"; // templates/show_sensor_data.html 페이지를 렌더링하여 사용자에게 보여줍니다.
+        return "show_sensor_data";
     }
 
-    /**
-     * '전체 센서 기록' 페이지를 처리하고, 필터링 기능을 수행하는 메소드입니다.
-     * @param startDate 검색 시작일 (yyyy-MM-dd'T'HH:mm 형식)
-     * @param endDate 검색 종료일 (yyyy-MM-dd'T'HH:mm 형식)
-     * @param deviceId 검색할 장치 ID
-     * @param page 현재 페이지 번호
-     * @param model 뷰에 데이터를 전달하기 위한 객체
-     * @return "sensor_history" HTML 템플릿
-     */
     @GetMapping("/sensor_history")
     public String showSensorHistory(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @RequestParam(required = false) String deviceId,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false, defaultValue = "false") boolean filterDateEnabled,
+            @RequestParam(required = false, defaultValue = "false") boolean filterTempEnabled,
+            @RequestParam(required = false, defaultValue = "false") boolean filterHumiEnabled,
+            @RequestParam(required = false, defaultValue = "false") boolean filterSoilEnabled,
+            @RequestParam(required = false, defaultValue = "false") boolean filterWaterEnabled,
+            @RequestParam(required = false, defaultValue = "false") boolean filterDeviceEnabled,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Double minTemp,
+            @RequestParam(required = false) Double maxTemp,
+            @RequestParam(required = false) Double minHumi,
+            @RequestParam(required = false) Double maxHumi,
+            @RequestParam(required = false) Double minSoil,
+            @RequestParam(required = false) Double maxSoil,
+            @RequestParam(required = false) Integer minWater,
+            @RequestParam(required = false) Integer maxWater,
+            @RequestParam(required = false) String deviceId,
             Model model) {
-        // 1. 페이지네이션 설정을 생성합니다. 한 페이지에 30개의 데이터를 최신순으로 표시합니다.
-        Pageable pageable = PageRequest.of(page, 30, Sort.by("timestamp").descending());
-        // 2. 동적 쿼리를 생성하기 위한 Specification 객체를 만듭니다.
-        //    Specification.where(null)은 아무 조건도 없는 기본 상태입니다.
-        Specification<SensorData> spec = Specification.where(null);
-        // 3. 필터 조건들을 Specification에 추가합니다.
-        //    각 파라미터가 null이 아닐 경우에만 검색 조건이 추가됩니다.
 
-        // 시작일
-        if (startDate != null) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("timestamp"), startDate));
-        }
-        // 종료일
-        if (endDate != null) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), endDate));
-        }
-        if (deviceId != null && !deviceId.isEmpty()) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("raspberryId"), deviceId));
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
 
-        // 4. 완성된 Specification과 Pageable 객체로 데이터베이스를 조회합니다.
+        Specification<SensorData> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (filterDateEnabled) {
+                try {
+                    LocalDateTime start = (startDate != null && !startDate.isEmpty()) ? LocalDateTime.parse(startDate) : null;
+                    LocalDateTime end = (endDate != null && !endDate.isEmpty()) ? LocalDateTime.parse(endDate) : null;
+                    if (start != null && end != null) predicates.add(criteriaBuilder.between(root.get("timestamp"), start, end));
+                    else if (start != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("timestamp"), start));
+                    else if (end != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), end));
+                } catch (DateTimeParseException e) {
+                    model.addAttribute("parsingError", "날짜 형식이 잘못되었습니다. (YYYY-MM-DDTHH:MM)");
+                    // log.error("Date parsing error: {}", e.getMessage()); // 에러 로그도 제거 (필요하면 유지)
+                }
+            }
+            if (filterTempEnabled) {
+                if (minTemp != null && maxTemp != null) predicates.add(criteriaBuilder.between(root.get("temperature"), minTemp, maxTemp));
+                else if (minTemp != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("temperature"), minTemp));
+                else if (maxTemp != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("temperature"), maxTemp));
+            }
+            if (filterHumiEnabled) {
+                if (minHumi != null && maxHumi != null) predicates.add(criteriaBuilder.between(root.get("humidity"), minHumi, maxHumi));
+                else if (minHumi != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("humidity"), minHumi));
+                else if (maxHumi != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("humidity"), maxHumi));
+            }
+            if (filterSoilEnabled) {
+                if (minSoil != null && maxSoil != null) predicates.add(criteriaBuilder.between(root.get("soilMoisture"), minSoil, maxSoil));
+                else if (minSoil != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("soilMoisture"), minSoil));
+                else if (maxSoil != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("soilMoisture"), maxSoil));
+            }
+            if (filterWaterEnabled) {
+                if (minWater != null && maxWater != null) predicates.add(criteriaBuilder.between(root.get("waterLevel"), minWater, maxWater));
+                else if (minWater != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("waterLevel"), minWater));
+                else if (maxWater != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("waterLevel"), maxWater));
+            }
+            if (filterDeviceEnabled && deviceId != null && !deviceId.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("raspberryId"), deviceId.trim()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
         Page<SensorData> sensorDataPage = sensorDataRepository.findAll(spec, pageable);
 
-        // 5. 뷰(HTML)에서 사용할 수 있도록 모델에 데이터를 추가합니다.
         model.addAttribute("sensorDataList", sensorDataPage.getContent());
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", sensorDataPage.getNumber());
         model.addAttribute("totalPages", sensorDataPage.getTotalPages());
-
-        // 검색 후에도 필터 입력 값을 유지하기 위해 파라미터를 모델에 다시 전달합니다.
-        // (Thymeleaf의 param 객체를 사용하면 이 코드는 필수는 아니지만, 명시적으로 추가하는 것이 좋습니다.)
+        model.addAttribute("size", size);
+        model.addAttribute("filterDateEnabled", filterDateEnabled);
+        model.addAttribute("filterTempEnabled", filterTempEnabled);
+        model.addAttribute("filterHumiEnabled", filterHumiEnabled);
+        model.addAttribute("filterSoilEnabled", filterSoilEnabled);
+        model.addAttribute("filterWaterEnabled", filterWaterEnabled);
+        model.addAttribute("filterDeviceEnabled", filterDeviceEnabled);
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
+        model.addAttribute("minTemp", minTemp);
+        model.addAttribute("maxTemp", maxTemp);
+        model.addAttribute("minHumi", minHumi);
+        model.addAttribute("maxHumi", maxHumi);
+        model.addAttribute("minSoil", minSoil);
+        model.addAttribute("maxSoil", maxSoil);
+        model.addAttribute("minWater", minWater);
+        model.addAttribute("maxWater", maxWater);
         model.addAttribute("deviceId", deviceId);
 
         return "sensor_history";
