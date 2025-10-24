@@ -1,7 +1,8 @@
-package com.smartfarm.smartfarm_server.controller; // 패키지 경로는 실제 환경에 맞게 확인하세요.
+package com.smartfarm.smartfarm_server.controller;
 
 import com.smartfarm.smartfarm_server.model.CropInfo;
 import com.smartfarm.smartfarm_server.repository.CropInfoRepository;
+import com.smartfarm.smartfarm_server.repository.SensorDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +22,8 @@ import java.util.Optional;
 @Controller
 public class CropInfoController {
 
-    private final CropInfoRepository cropInfoRepository;
+    @Autowired
+    private CropInfoRepository cropInfoRepository;
 
     @Autowired
     public CropInfoController(CropInfoRepository cropInfoRepository) {
@@ -37,7 +39,7 @@ public class CropInfoController {
         List<CropInfo> allCrops = cropInfoRepository.findAll();
         model.addAttribute("recommendedCrops", allCrops);
 
-        return "settings_form"; // 템플릿 파일명 확인
+        return "settings_form";
     }
 
     @PostMapping("/save_settings")
@@ -62,7 +64,6 @@ public class CropInfoController {
         cropToSave.setTargetSoil(targetSoil);
         cropToSave.setTargetLight(targetLight);
 
-        // --- 여기만 수정 ---
         // 4. 예상 수확일 계산 및 Date 타입으로 변환
         if (harvestDays != null && harvestDays > 0) {
             LocalDateTime harvestDateTime = LocalDate.now().plusDays(harvestDays).atStartOfDay();
@@ -72,7 +73,6 @@ public class CropInfoController {
         } else {
             cropToSave.setHarvestDate(null);
         }
-        // --- 수정 끝 ---
 
         cropToSave.setActive(true);
         cropInfoRepository.save(cropToSave);

@@ -1,7 +1,7 @@
-package com.smartfarm.smartfarm_server.controller; // 패키지 경로 확인
+package com.smartfarm.smartfarm_server.controller;
 
-import com.smartfarm.smartfarm_server.model.SensorData; // 모델 경로 확인
-import com.smartfarm.smartfarm_server.repository.SensorDataRepository; // 리포지토리 경로 확인
+import com.smartfarm.smartfarm_server.model.SensorData;
+import com.smartfarm.smartfarm_server.repository.SensorDataRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
