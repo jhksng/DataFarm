@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini 챗봇 - 스마트팜 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .user { color: #1d4ed8; margin-bottom: 6px; font-weight: 500; }
+        .bot { color: #047857; margin-bottom: 6px; font-weight: 500; }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+<div class="flex h-screen">
+
+    <!-- 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='chat')}"></div>
+
+    <!-- 메인 영역 -->
+    <main class="flex-1 p-8 overflow-y-auto">
+        <h2 class="text-3xl font-bold text-slate-800 mb-6">Gemini 챗봇</h2>
+
+        <!-- 채팅 카드 -->
+        <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 max-w-2xl mx-auto">
+            <h3 class="text-xl font-semibold text-slate-700 mb-4">🌱 SmartFarm Gemini 대화</h3>
+
+            <!-- 채팅창 -->
+            <div id="chat-box" class="mb-4"></div>
+
+            <!-- 입력창 -->
+            <form id="chat-form" class="flex gap-3">
+                <input type="text" id="chat-input"
+                       class="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="질문을 입력하세요..." required>
+                <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">
+                    보내기
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+<script>
+    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("chat-input");
+    let chatHistory = "";
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const userMsg = input.value.trim();
+        if (!userMsg) return;
+
+        appendMessage("나", userMsg, "user");
+        chatHistory += `\n나: ${userMsg}\n`;
+        input.value = "";
+
+        try {
+            const response = await fetch("/gemini/simple", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ input: userMsg, context: chatHistory })
+            });
+
+            const botReply = await response.text();
+            if (!response.ok) {
+                appendMessage("Gemini", "⚠️ 서버 오류가 발생했어요.", "bot");
+                return;
+            }
+
+            appendMessage("Gemini", botReply, "bot");
+            chatHistory += `Gemini: ${botReply}\n`;
+        } catch (err) {
+            appendMessage("시스템", "⚠️ 네트워크 오류가 발생했어요.", "bot");
+        }
+    });
+
+    function appendMessage(sender, message, type) {
+        const div = document.createElement("div");
+        div.className = type;
+        div.innerHTML = `<strong>${sender}:</strong> <span class="whitespace-pre-line">${message}</span>`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+</body>
+</html>
