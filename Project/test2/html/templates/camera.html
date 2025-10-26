@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카메라 제어 - 스마트팜 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 모듈 상태 현황 페이지와 통일된 폰트 및 스크롤바 스타일 */
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #94A3B8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748B; }
+        /* 주요 색상을 indigo(기존) 대신 slate(통일성) 또는 indigo/slate 조합으로 조정 */
+    </style>
+</head>
+<body class="bg-slate-100">
+
+<div class="flex h-screen">
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='camera')}"></div>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+
+        <div class="pb-3">
+            <h2 class="text-3xl font-bold text-slate-800">스마트팜 카메라</h2>
+        </div>
+
+        <div class="my-8 bg-white p-6 rounded-xl shadow-md border border-slate-200">
+            <h3 class="text-xl font-semibold text-slate-700 mb-4">카메라 제어</h3>
+            <button id="takePhotoBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                사진 촬영하기
+            </button>
+            <div id="statusMessage" class="mt-4 text-sm text-slate-600 hidden items-center">
+                <span id="loadingSpinner" class="animate-spin inline-block mr-2 w-4 h-4 border-2 border-t-2 border-indigo-500 rounded-full"></span>
+                <span id="messageText">사진 촬영 요청 중...</span>
+            </div>
+        </div>
+
+        <div id="photoList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
+
+        <div id="paginationContainer" class="flex justify-center mt-10 space-x-2">
+        </div>
+
+    </main>
+</div>
+
+<div id="messageBox" class="fixed inset-0 bg-slate-900 bg-opacity-40 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200">
+        <h3 id="messageTitle" class="text-xl font-semibold mb-2 text-slate-800"></h3>
+        <p id="messageContent" class="text-slate-600 mb-4"></p>
+        <div class="flex justify-end">
+            <button id="closeMessageBox" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg">확인</button>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+<script>
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const photoList = document.getElementById('photoList');
+    const statusMessage = document.getElementById('statusMessage');
+    const messageBox = document.getElementById('messageBox');
+    const messageTitle = document.getElementById('messageTitle');
+    const messageContent = document.getElementById('messageContent');
+    const closeMessageBox = document.getElementById('closeMessageBox');
+
+    const paginationContainer = document.getElementById('paginationContainer');
+
+    let currentPage = 0;
+    // 💡 변경: 한 페이지에 표시할 항목 수를 8로 설정 (Controller와도 일치해야 함)
+    const pageSize = 8;
+
+    // 메시지 박스 표시 함수 (기존과 동일)
+    function showMessageBox(title, message) {
+        messageTitle.textContent = title;
+        messageContent.textContent = message;
+        messageBox.classList.remove('hidden');
+        messageBox.classList.add('flex');
+    }
+
+    // 메시지 박스 숨기기 (기존과 동일)
+    closeMessageBox.addEventListener('click', () => {
+        messageBox.classList.add('hidden');
+        messageBox.classList.remove('flex');
+    });
+
+    // 사진 촬영 버튼 클릭 이벤트 수정 (fetchPhotoList 호출 시 인자 전달)
+    takePhotoBtn.addEventListener('click', () => {
+        statusMessage.classList.remove('hidden');
+        statusMessage.classList.add('flex');
+        takePhotoBtn.disabled = true;
+
+        fetch('/api/request-photo-capture', { method: 'POST' })
+            .then(response => {
+                if (!response.ok) return response.text().then(err => { throw new Error(err || '촬영 요청 실패'); });
+                return response.text();
+            })
+            .then(message => {
+                showMessageBox('촬영 요청 성공', message);
+                setTimeout(() => fetchPhotoList(0), 1000);
+            })
+            .catch(error => showMessageBox('오류 발생', `사진 촬영 요청 중 오류가 발생했습니다: ${error.message}`))
+            .finally(() => {
+                statusMessage.classList.add('hidden');
+                statusMessage.classList.remove('flex');
+                takePhotoBtn.disabled = false;
+            });
+    });
+
+    // 💡 페이지네이션 UI 생성 함수 💡
+    function renderPagination(pageInfo) {
+        paginationContainer.innerHTML = '';
+
+        const totalPages = pageInfo.totalPages;
+        const currentPage = pageInfo.number;
+
+        if (totalPages <= 1) return;
+
+        // 표시할 페이지 버튼의 최대 개수 설정 (예: 1 2 [3] 4 5)
+        const maxPagesToShow = 5;
+        let startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
+
+        // 마지막 페이지에서 버튼 개수가 부족할 때 startPage 조정
+        if (endPage - startPage < maxPagesToShow - 1) {
+            startPage = Math.max(0, endPage - maxPagesToShow + 1);
+        }
+
+        // 이전 페이지 버튼
+        if (currentPage > 0) {
+            const prevBtn = createPageButton('이전', currentPage - 1, false);
+            paginationContainer.appendChild(prevBtn);
+        }
+
+        // 페이지 번호 버튼들
+        for (let i = startPage; i <= endPage; i++) {
+            const isCurrent = (i === currentPage);
+            const pageBtn = createPageButton(i + 1, i, isCurrent);
+            paginationContainer.appendChild(pageBtn);
+        }
+
+        // 다음 페이지 버튼
+        if (currentPage < totalPages - 1) {
+            const nextBtn = createPageButton('다음', currentPage + 1, false);
+            paginationContainer.appendChild(nextBtn);
+        }
+    }
+
+    // 페이지 버튼을 생성하는 헬퍼 함수
+    function createPageButton(text, pageIndex, isCurrent) {
+        const button = document.createElement('button');
+        button.textContent = text;
+
+        // Tailwind CSS 클래스를 사용하여 버튼 스타일 적용
+        button.className = 'py-2 px-4 rounded-lg font-semibold transition-colors duration-200 shadow-sm'; // rounded-md -> rounded-lg 통일
+
+        if (isCurrent) {
+            button.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            button.disabled = true;
+        } else {
+            // 버튼 색상을 모듈 상태 현황의 테이블 헤더 배경색과 유사하게 조정하여 통일성 강화
+            button.classList.add('bg-slate-100', 'text-slate-700', 'hover:bg-indigo-100', 'hover:text-indigo-600');
+            button.addEventListener('click', () => {
+                fetchPhotoList(pageIndex); // 버튼 클릭 시 해당 페이지를 로드
+            });
+        }
+        return button;
+    }
+
+   // 💡 사진 목록을 가져오는 함수 (페이지네이션 적용) 💡
+    async function fetchPhotoList(page = 0) { // 기본값으로 0페이지를 사용
+        currentPage = page; // 전역 현재 페이지 업데이트
+
+        // 로딩 상태 표시
+        photoList.innerHTML = '<p class="col-span-full text-center text-indigo-600 py-10"><span class="animate-pulse">사진 목록을 불러오는 중입니다...</span></p>';
+        paginationContainer.innerHTML = '';
+
+        // 💡 페이지 번호와 크기를 쿼리 파라미터로 전송 (pageSize는 8로 고정) 💡
+        const url = `/api/photos?page=${page}&size=${pageSize}`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('사진 목록을 불러오는 데 실패했습니다.');
+
+            const pageResponse = await response.json();
+            const photos = pageResponse.content;
+
+            photoList.innerHTML = '';
+
+            if (photos.length === 0) {
+                photoList.innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">아직 촬영된 사진이 없습니다.</p>'; // 텍스트 색상 변경
+                renderPagination(pageResponse);
+                return;
+            }
+
+            // GCS 서명 URL 발급 요청 (이 부분은 이전과 동일하게 병렬 처리)
+            const photoPromises = photos.map(async photo => {
+                const urlResponse = await fetch(`/api/signed-url?filePath=${encodeURIComponent(photo.photoUrl)}`);
+                if (!urlResponse.ok) return { ...photo, signedUrl: 'error' };
+                const signedUrl = await urlResponse.text();
+                return { ...photo, signedUrl };
+            });
+
+            const photosWithSignedUrls = await Promise.all(photoPromises);
+
+            photosWithSignedUrls.forEach(photo => {
+                const imageUrl = photo.signedUrl !== 'error' ? photo.signedUrl : 'https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+로드+실패';
+
+                // --- 💡 변경사항 1: 사진 이름 처리 💡 ---
+                let filename = photo.photoUrl.split('/').pop();
+                if (filename.startsWith('farm01_cam01_')) {
+                    filename = filename.substring('farm01_cam01_'.length);
+                }
+
+                // --- 💡 변경사항 2: 생장 수치 값 처리 💡 ---
+                const brightnessRatio = photo.brightnessRatio !== null && photo.brightnessRatio !== undefined
+                                        ? parseFloat(photo.brightnessRatio).toFixed(4)
+                                        : 'N/A';
+
+                // --- 💡 변경사항 3: 시간 +9 시간 조정 💡 ---
+                // 1. photo.uploadDate 문자열을 Date 객체로 변환
+                const uploadDate = new Date(photo.uploadDate);
+                // 2. 9시간(9 * 60분 * 60초 * 1000밀리초)을 더함
+                // 이 방법은 photo.uploadDate가 서버의 로컬 시간이 아닌 UTC로 해석될 때, KST(UTC+9)로 표시하기 위해 사용됩니다.
+                const adjustedTime = new Date(uploadDate.getTime() + (9 * 60 * 60 * 1000));
+                // 3. 로컬 형식으로 표시
+                const formattedTime = adjustedTime.toLocaleString();
+
+                
+                // 카드 스타일을 모듈 상태 현황 테이블 컨테이너 스타일과 유사하게 변경
+                const photoCard = `
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow duration-200">
+                        <div class="relative w-full h-64 mb-4 overflow-hidden rounded-lg">
+                            <img src="${imageUrl}"
+                                 alt="${photo.cropName} 작물 사진"
+                                 class="w-full h-full object-contain transition-transform duration-300 hover:scale-[1.03]"
+                                 onerror="this.src='https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+없음';">
+                        </div>
+                        <div class="text-slate-800">
+                            <h3 class="font-semibold text-lg truncate">${filename}</h3>
+                            <p class="text-sm text-slate-500 mt-1">작물: <span class="font-medium text-slate-700">${photo.cropName}</span></p>
+                            <p class="text-sm text-slate-500">생장 수치 값: <span class="font-medium text-slate-700">${brightnessRatio}</span></p>
+                            <p class="text-xs text-slate-400 mt-1">촬영 시각: ${formattedTime}</p>
+                        </div>
+                    </div>
+                `;
+                photoList.innerHTML += photoCard;
+            });
+
+            // 💡 페이지네이션 UI 렌더링 💡
+            renderPagination(pageResponse);
+
+        } catch (error) {
+            showMessageBox('오류 발생', error.message);
+            console.error('Error fetching photos:', error);
+            photoList.innerHTML = '<p class="col-span-full text-center text-red-500 py-10">사진 목록을 불러오는 중 오류가 발생했습니다.</p>';
+            paginationContainer.innerHTML = '';
+        }
+    }
+
+    // 페이지 로드 시 사진 목록을 바로 가져옵니다. (첫 페이지)
+    document.addEventListener('DOMContentLoaded', () => fetchPhotoList(0));
+</script>
+
+</body>
+</html>

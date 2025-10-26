@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>저장된 작물 설정 - 스마트팜 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+<div class="flex h-screen">
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='show-settings')}"></div>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <h2 class="text-3xl font-bold text-slate-800 mb-6">저장된 작물 설정</h2>
+
+        <div th:if="${message}" class="mb-6 p-4 text-sm text-green-700 bg-green-100 rounded-lg" th:text="${message}"></div>
+        <div th:if="${error}" class="mb-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg" th:text="${error}"></div>
+
+        <div class="bg-white rounded-xl shadow-md border border-slate-200">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-700">설정 목록</h3>
+                <a th:href="@{/settings}" class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 transition-colors">
+                    새로운 설정 추가하기
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-slate-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">작물 이름</th>
+                        <th scope="col" class="px-6 py-3">온도(°C)</th>
+                        <th scope="col" class="px-6 py-3">습도(%)</th>
+                        <th scope="col" class="px-6 py-3">토양습도(%)</th>
+                        <th scope="col" class="px-6 py-3">조도시간</th>
+                        <th scope="col" class="px-6 py-3">수확일</th>
+                        <th scope="col" class="px-6 py-3">상태</th>
+                        <th scope="col" class="px-6 py-3 text-center">액션</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="crop : ${crops}" th:classappend="${crop.isActive} ? 'bg-blue-50 font-semibold' : ''" class="border-b border-gray-200 hover:bg-slate-50">
+                        <td class="px-6 py-4" th:text="${crop.crop}"></td>
+                        <td class="px-6 py-4" th:text="${crop.targetTemp}"></td>
+                        <td class="px-6 py-4" th:text="${crop.targetHumi}"></td>
+                        <td class="px-6 py-4" th:text="${crop.targetSoil}"></td>
+                        <td class="px-6 py-4" th:text="${crop.targetLight}"></td>
+                        <td class="px-6 py-4" th:text="${crop.harvestDate != null ? #dates.format(crop.harvestDate, 'yyyy-MM-dd') : 'N/A'}"></td>
+                        <td class="px-6 py-4">
+                            <span th:if="${crop.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✅ 활성화됨</span>
+                            <span th:unless="${crop.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">❌ 비활성화됨</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <form th:if="${!crop.isActive}" th:action="@{/activate_crop/{cropName}(cropName=${crop.crop})}" method="post">
+                                <button type="submit" class="px-4 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-md hover:bg-green-700 transition-colors">활성화</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${crops.isEmpty()}">
+                        <td colspan="8" class="text-center py-8 text-slate-500">저장된 작물 설정이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+</body>
+</html>

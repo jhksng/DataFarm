@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>작물 설정 입력 - 스마트팜 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+<div class="flex h-screen">
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='settings')}"></div>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <h2 class="text-3xl font-bold text-slate-800 mb-6">작물 환경 설정</h2>
+
+        <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+            <form action="/save_settings" method="post" th:object="${currentSettings}">
+
+                <div class="mb-8 pb-8 border-b border-gray-200">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">추천 작물 설정</h3>
+                    <div class="flex items-center py-2">
+                        <label for="recommendedCropSelect" class="w-48 text-sm font-medium text-gray-600">추천 작물 선택</label>
+                        <select id="recommendedCropSelect" class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">-- 작물 정보를 입력해주세요 --</option>
+                            <option th:each="cropInfo : ${recommendedCrops}"
+                                    th:value="${cropInfo.crop}"
+                                    th:text="${cropInfo.crop}"
+                                    th:data-temp="${cropInfo.targetTemp}"
+                                    th:data-humi="${cropInfo.targetHumi}"
+                                    th:data-soil="${cropInfo.targetSoil}"
+                                    th:data-light="${cropInfo.targetLight}"
+                                    th:data-harvest-date="${cropInfo.harvestDate}"> </option>
+                        </select>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500" style="margin-left: 12rem;">
+                        작물을 선택하면 아래의 일반 설정과 환경 목표값이 자동으로 채워집니다.
+                    </p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">일반 설정</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center py-2">
+                            <label for="crop" class="w-48 text-sm font-medium text-gray-600">작물 이름</label>
+                            <input type="text" id="crop" name="crop" required th:field="*{crop}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center py-2">
+                            <label for="harvestDays" class="w-48 text-sm font-medium text-gray-600">예상 수확일 (며칠 후)</label>
+                            <input type="number" id="harvestDays" name="harvestDays"
+                                   th:value="*{harvestDate != null ? T(java.time.temporal.ChronoUnit).DAYS.between(T(java.time.LocalDate).now(), new java.sql.Date(harvestDate.getTime()).toLocalDate()) : 0}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">환경 목표값</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center py-2">
+                            <label for="targetTemp" class="w-48 text-sm font-medium text-gray-600">목표 온도 (°C)</label>
+                            <input type="number" step="0.1" id="targetTemp" name="targetTemp" required th:field="*{targetTemp}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center py-2">
+                            <label for="targetHumi" class="w-48 text-sm font-medium text-gray-600">목표 습도 (%)</label>
+                            <input type="number" step="0.1" id="targetHumi" name="targetHumi" required th:field="*{targetHumi}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center py-2">
+                            <label for="targetSoil" class="w-48 text-sm font-medium text-gray-600">토양습도 (%)</label>
+                            <input type="number" step="0.1" id="targetSoil" name="targetSoil" required th:field="*{targetSoil}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center py-2">
+                            <label for="targetLight" class="w-48 text-sm font-medium text-gray-600">일일 조도시간 (시간)</label>
+                            <input type="number" step="0.1" id="targetLight" name="targetLight" required th:field="*{targetLight}"
+                                   class="w-96 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+                    <button type="button" onclick="history.back()" class="px-6 py-2 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors">취소</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">설정 저장</button>
+                </div>
+
+            </form> </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/ // Thymeleaf 템플릿 내 JavaScript 사용 시 권장
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectElement = document.getElementById('recommendedCropSelect');
+        const cropInput = document.getElementById('crop');
+        const harvestDaysInput = document.getElementById('harvestDays');
+        const tempInput = document.getElementById('targetTemp');
+        const humiInput = document.getElementById('targetHumi');
+        const soilInput = document.getElementById('targetSoil');
+        const lightInput = document.getElementById('targetLight');
+
+        // 1. 컨트롤러에서 받은 recommendedCrops 리스트를 그대로 JS 변수에 할당
+        const recommendedCrops = /*[[${recommendedCrops}]]*/ [];
+
+        // 2. JavaScript 반복문을 사용하여 allCropsMap 생성
+        const allCropsMap = new Map();
+        recommendedCrops.forEach(crop => {
+            // harvestDate가 null이 아닐 경우 getTime() 호출, null이면 null 저장
+            // Thymeleaf가 Date 객체를 ISO 문자열 등으로 변환할 수 있으므로 new Date()로 감싸줌
+            const harvestEpoch = crop.harvestDate ? new Date(crop.harvestDate).getTime() : null;
+            allCropsMap.set(crop.crop, { // Map에 작물 이름(key)과 데이터 객체(value) 저장
+                crop: crop.crop,
+                temp: crop.targetTemp,
+                humi: crop.targetHumi,
+                soil: crop.targetSoil,
+                light: crop.targetLight,
+                harvestEpoch: harvestEpoch // null 또는 epoch time 저장
+            });
+        });
+
+
+        selectElement.addEventListener('change', function() {
+            const selectedCropName = this.value; // 선택된 작물 이름
+
+            if (!selectedCropName) {
+                // "-- 작물 정보를 입력해주세요 --" 선택 시 폼 비우기
+                cropInput.value = '';
+                harvestDaysInput.value = '';
+                tempInput.value = '';
+                humiInput.value = '';
+                soilInput.value = '';
+                lightInput.value = '';
+                return;
+            }
+
+            // Map에서 선택된 작물 데이터 찾기
+            const selectedCropData = allCropsMap.get(selectedCropName);
+
+            if (!selectedCropData) {
+                console.error("선택된 작물 데이터를 찾을 수 없습니다:", selectedCropName);
+                return;
+            }
+
+            // 1. 데이터 추출
+            const targetTemp = selectedCropData.temp;
+            const targetHumi = selectedCropData.humi;
+            const targetSoil = selectedCropData.soil;
+            const targetLight = selectedCropData.light;
+            const harvestEpoch = selectedCropData.harvestEpoch; // 밀리초(epoch time) 또는 null
+
+            // 2. '예상 수확일 (며칠 후)' 계산
+            let harvestDays = '0';
+            if (harvestEpoch != null) { // null 체크
+                try {
+                    const harvestDate = new Date(harvestEpoch); // 밀리초로 Date 객체 생성
+                    const today = new Date();
+                    harvestDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    const diffTime = harvestDate.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    harvestDays = diffDays > 0 ? diffDays.toString() : '0';
+                } catch (e) {
+                    console.error("날짜 계산 중 오류 발생:", e);
+                }
+            }
+
+            // 3. 폼 필드에 값 채우기
+            cropInput.value = selectedCropName; // 선택된 작물 이름으로 설정
+            harvestDaysInput.value = harvestDays;
+            tempInput.value = targetTemp != null ? targetTemp : ''; // null 체크 후 값 설정
+            humiInput.value = targetHumi != null ? targetHumi : '';
+            soilInput.value = targetSoil != null ? targetSoil : '';
+            lightInput.value = targetLight != null ? targetLight : '';
+        });
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>
