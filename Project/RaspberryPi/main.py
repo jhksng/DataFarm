@@ -17,6 +17,9 @@ import cv2
 import numpy as np
 import logging
 from datetime import datetime, timezone
+import schedule
+import shutil
+
 
 # --- Logging Configuration ---
 LOG_FILE = "/home/pi/datafarm/system_log.txt"
@@ -91,6 +94,32 @@ last_raspi_read_time = 0
 last_arduino_read_time = 0
 raspi_interval = 10
 arduino_interval = 60
+
+def upload_daily_log():
+    """매일 00:05에 system_log.txt를 GCS로 업로드하고 초기화"""
+    try:
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+
+        date_str = datetime.now().strftime("%Y%m%d")
+        local_path = LOG_FILE
+        blob_name = f"logs/system_log_{date_str}.txt"
+
+        if not os.path.exists(local_path):
+            logger.warning(f"No system log file found at {local_path}")
+            return
+
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(local_path)
+        logger.info(f"✅ System log uploaded to GCS as {blob_name}")
+
+        # ✅ 업로드 후 로그 초기화
+        open(local_path, "w").close()
+        logger.info("🧹 Local system log cleared after upload")
+
+    except Exception as e:
+        logger.error(f"❌ Error uploading daily log: {e}")
+
 
 def setup_gpios():
     GPIO.setmode(GPIO.BCM)
@@ -284,6 +313,16 @@ def on_message(client, userdata, msg):
     except Exception as e:
         logger.error(f"Error processing MQTT message: {e}")
 
+def run_scheduler():
+    """schedule 모듈을 이용해 매일 자정 로그 업로드 실행"""
+    schedule.every().day.at("00:05").do(upload_daily_log)
+    logger.info("🕛 Daily log upload scheduler started (runs every 00:05)")
+
+    while True:
+        schedule.run_pending()
+        time.sleep(30)
+
+
 if __name__ == '__main__':
     setup_gpios()
     mqtt_client = mqtt.Client(client_id=str(uuid.uuid4()))
@@ -293,7 +332,7 @@ if __name__ == '__main__':
     try:
         mqtt_client.connect(MQTT_BROKER_HOSTNAME, MQTT_BROKER_PORT, 60)
         mqtt_client.loop_start()
-
+        threading.Thread(target=run_scheduler, daemon=True).start()
         last_raspi_read_time = time.time()
         last_arduino_read_time = time.time()
 
