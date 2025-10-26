@@ -107,4 +107,15 @@ public class RootController {
     public String cameraPage() {
         return "camera";
     }
+
+    @GetMapping("/chatbot")
+    public String test() {
+        return "chatbot"; // templates/test.html 렌더링
+    }
+
+    @GetMapping("/harvest")
+    public String harvest() {
+        return "harvest"; // templates/harvest.html 렌더링
+    }
+
 }
