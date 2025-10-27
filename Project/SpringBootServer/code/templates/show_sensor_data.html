@@ -16,8 +16,12 @@
 
     <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-8">
         <h3 class="text-xl font-semibold text-slate-700 mb-2">가장 최근 측정값</h3>
-        <p class="text-sm text-slate-500 mb-4" th:if="${latestSensorData != null}"
-           th:text="'측정 시간: ' + ${#temporals.format(latestSensorData.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></p>
+
+        <p id="latestTimeText" class="text-sm text-slate-500 mb-4"
+           th:if="${latestSensorData != null}"
+           th:attr="data-time=${#temporals.format(latestSensorData.timestamp, 'yyyy-MM-dd''T''HH:mm:ss')}">
+        </p>
+
         <p class="text-sm text-slate-500 mb-4" th:unless="${latestSensorData != null}">측정된 데이터가 없습니다.</p>
 
         <div th:if="${latestSensorData != null}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -55,6 +59,18 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     document.addEventListener('DOMContentLoaded', async function() { // async 추가
+    // ✅ 상단 측정 시간 표시를 KST(+9h)로 보정
+const latestTimeEl = document.getElementById('latestTimeText');
+if (latestTimeEl && latestTimeEl.getAttribute('data-time')) {
+    const utcDate = new Date(latestTimeEl.getAttribute('data-time'));
+    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+    const formatted = `${kstDate.getFullYear()}-${String(kstDate.getMonth() + 1).padStart(2, '0')}-${String(kstDate.getDate()).padStart(2, '0')} ` +
+                      `${String(kstDate.getHours()).padStart(2, '0')}:${String(kstDate.getMinutes()).padStart(2, '0')}:${String(kstDate.getSeconds()).padStart(2, '0')}`;
+    latestTimeEl.textContent = `측정 시간: ${formatted}`;
+}
+
+
+
         try {
             // API에서 최신 데이터 가져오기
             const response = await fetch('/api/sensor-data/recent'); // /recent 엔드포인트만 호출
@@ -66,10 +82,10 @@
             if (data && data.length > 0) {
                 // 데이터 포맷팅
                 const labels = data.map(item => {
-                    const date = new Date(item.timestamp);
-                    // 'HH:mm' 형식으로 시간 표시
-                    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                });
+    const utcDate = new Date(item.timestamp);
+    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+    return `${kstDate.getHours().toString().padStart(2, '0')}:${kstDate.getMinutes().toString().padStart(2, '0')}`;
+});
                 const temperatureData = data.map(item => item.temperature);
                 const humidityData = data.map(item => item.humidity);
                 const soilMoistureData = data.map(item => item.soilMoisture);

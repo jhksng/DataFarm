@@ -154,7 +154,11 @@
                     <td class="px-6 py-4" th:text="${#numbers.formatDecimal(data.humidity, 1, 2)}"></td>
                     <td class="px-6 py-4" th:text="${#numbers.formatDecimal(data.soilMoisture, 1, 2)}"></td>
                     <td class="px-6 py-4" th:text="${data.waterLevel}"></td>
-                    <td class="px-6 py-4" th:text="${#temporals.format(data.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td class="px-6 py-4 sensor-time"
+                        th:attr="data-time=${#temporals.format(data.timestamp, 'yyyy-MM-dd''T''HH:mm:ss')}">
+                        <!-- JS에서 +9시간 보정해서 표시 -->
+                    </td>
+
                 </tr>
                 <tr th:if="${#lists.isEmpty(sensorDataList)}">
                     <td colspan="7" class="text-center py-8 text-slate-500">기록된 데이터가 없거나, 검색 조건에 맞는 결과가 없습니다.</td>
@@ -208,6 +212,25 @@
         </div>
     </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const timeCells = document.querySelectorAll('.sensor-time');
+        timeCells.forEach(cell => {
+            const utcTime = cell.getAttribute('data-time');
+            if (!utcTime) return;
+
+            // UTC → KST (+9시간)
+            const date = new Date(utcTime);
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+            // YYYY-MM-DD HH:mm:ss 포맷
+            const formatted = `${kstDate.getFullYear()}-${String(kstDate.getMonth() + 1).padStart(2, '0')}-${String(kstDate.getDate()).padStart(2, '0')} ` +
+                              `${String(kstDate.getHours()).padStart(2, '0')}:${String(kstDate.getMinutes()).padStart(2, '0')}:${String(kstDate.getSeconds()).padStart(2, '0')}`;
+            cell.textContent = formatted;
+        });
+    });
+</script>
 
 <div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
 </body>

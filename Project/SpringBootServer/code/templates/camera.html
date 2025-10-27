@@ -207,7 +207,7 @@
                 return { ...photo, signedUrl };
             });
 
-            const photosWithSignedUrls = await Promise.all(photoPromises);
+           const photosWithSignedUrls = await Promise.all(photoPromises);
 
             photosWithSignedUrls.forEach(photo => {
                 const imageUrl = photo.signedUrl !== 'error' ? photo.signedUrl : 'https://placehold.co/400x300/e5e7eb/6b7280?text=이미지+로드+실패';
@@ -232,7 +232,7 @@
                 // 3. 로컬 형식으로 표시
                 const formattedTime = adjustedTime.toLocaleString();
 
-                
+
                 // 카드 스타일을 모듈 상태 현황 테이블 컨테이너 스타일과 유사하게 변경
                 const photoCard = `
                     <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow duration-200">

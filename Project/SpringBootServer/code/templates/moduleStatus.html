@@ -1,145 +1,196 @@
 <!doctype html>
-
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-
 <head>
-
     <meta charset="UTF-8">
-
     <title>모듈 상태 현황 - 스마트팜 대시보드</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-
     <style>
-
         body { font-family: 'Noto Sans KR', sans-serif; }
-
-        /* ON 상태 (초록색) */
-
         .status-on { color: #10B981; font-weight: 600; }
-
-        /* OFF 상태 (빨간색) */
-
         .status-off { color: #EF4444; font-weight: 600; }
-
-        /* 쿨타임 표시 (작은 글씨) */
-
         .status-cooldown { font-size: 0.8rem; color: #6B7280; }
-
+        .control-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-on { background-color: #10B981; color: white; }
+        .btn-on:hover { background-color: #059669; }
+        .btn-off { background-color: #EF4444; color: white; }
+        .btn-off:hover { background-color: #DC2626; }
+        .btn-override {
+            background-color: #3B82F6; color: white;
+            padding: 10px 20px; border-radius: 10px;
+            font-weight: 600;
+        }
+        .btn-override:hover { background-color: #2563EB; }
+        .btn-disable {
+            background-color: #F59E0B; color: white;
+            padding: 10px 20px; border-radius: 10px;
+            font-weight: 600;
+        }
+        .btn-disable:hover { background-color: #D97706; }
     </style>
-
 </head>
 
 <body class="bg-slate-100">
-
-
-
 <div class="flex h-screen">
-
     <div th:replace="~{fragments/sidebar :: sidebarFragment(active='module-status')}"></div>
 
-
-
     <main class="flex-1 p-8 overflow-y-auto">
-
-        <h2 class="text-3xl font-bold text-slate-800 mb-8">모듈 상태 현황</h2>
-
-
-
-        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-x-auto">
-
-            <div class="p-6">
-
-                <h3 class="text-xl font-semibold text-slate-700">전체 모듈 제어 상태</h3>
-
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">모듈 상태 현황</h2>
+            <div class="flex gap-3">
+                <!-- ✨ 오버라이드 버튼 -->
+                <button id="override-btn" class="btn-override">🔒 오버라이드 모드 활성화</button>
+                <!-- ✨ 오버라이드 해제 버튼 -->
+                <button id="override-disable-btn" class="btn-disable">🧹 오버라이드 즉시 해제</button>
             </div>
-
-
-
-            <table class="w-full text-sm text-left text-slate-500">
-
-                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
-
-                <tr>
-
-                    <th scope="col" class="px-6 py-3">장치 ID</th>
-
-                    <th scope="col" class="px-6 py-3">모듈 이름</th>
-
-                    <th scope="col" class="px-6 py-3 text-center">현재 상태</th>
-
-                    <th scope="col" class="px-6 py-3">마지막 명령</th>
-
-                    <th scope="col" class="px-6 py-3">마지막 작동 시간</th>
-
-                    <th scope="col" class="px-6 py-3">누적 조명 시간</th>
-
-                </tr>
-
-                </thead>
-
-                <tbody>
-
-                <tr th:each="status : ${statuses}" class="bg-white border-b hover:bg-slate-50">
-
-
-
-                    <td class="px-6 py-4 font-medium text-slate-900" th:text="${status.deviceId}">raspi-01</td>
-
-
-
-                    <td class="px-6 py-4" th:text="${status.moduleName}">LED Lamp</td>
-
-
-
-                    <td class="px-6 py-4 text-center">
-
-                        <span th:if="${status.status == 1}" class="status-on">ON (작동 중)</span>
-
-                        <span th:if="${status.status == 0}" class="status-off">OFF (대기)</span>
-
-                    </td>
-
-
-
-                    <td class="px-6 py-4" th:text="${status.command}">ON</td>
-
-
-
-                    <td class="px-6 py-4" th:text="${#dates.format(status.lastOperationTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</td>
-
-
-
-                    <td class="px-6 py-4" th:text="${#numbers.formatDecimal(status.accumulatedLightTime, 0, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
-
-                </tr>
-
-
-
-                <tr th:if="${statuses.isEmpty()}">
-
-                    <td colspan="6" class="text-center py-8 text-slate-500">현재 등록된 모듈 상태 데이터가 없습니다.</td>
-
-                </tr>
-
-                </tbody>
-
-            </table>
-
         </div>
 
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-x-auto">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-slate-700">전체 모듈 제어 상태</h3>
+            </div>
 
+            <table class="w-full text-sm text-left text-slate-500">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">장치 ID</th>
+                    <th scope="col" class="px-6 py-3">모듈 이름</th>
+                    <th scope="col" class="px-6 py-3 text-center">현재 상태</th>
+                    <th scope="col" class="px-6 py-3">마지막 명령</th>
+                    <th scope="col" class="px-6 py-3">마지막 작동 시간</th>
+                    <th scope="col" class="px-6 py-3">누적 조명 시간</th>
+                    <th scope="col" class="px-6 py-3 text-center">수동 제어</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="status : ${statuses}" class="bg-white border-b hover:bg-slate-50">
+                    <td class="px-6 py-4 font-medium text-slate-900" th:text="${status.deviceId}">raspi-01</td>
+                    <td class="px-6 py-4" th:text="${status.moduleName}">LED Lamp</td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${status.status == 1}" class="status-on">ON (작동 중)</span>
+                        <span th:if="${status.status == 0}" class="status-off">OFF (대기)</span>
+                    </td>
+                    <td class="px-6 py-4" th:text="${status.command}">ON</td>
 
+                    <td class="px-6 py-4 last-operation-time"
+                        th:attr="data-time=${#dates.format(status.lastOperationTime, 'yyyy-MM-dd''T''HH:mm:ss')}">
+                        <!-- JS에서 변환 후 표시됨 -->
+                    </td>
+
+                    <td class="px-6 py-4" th:text="${#numbers.formatDecimal(status.accumulatedLightTime, 0, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="control-btn btn-on" disabled>ON</button>
+                        <button class="control-btn btn-off" disabled>OFF</button>
+                    </td>
+                </tr>
+
+                <tr th:if="${statuses.isEmpty()}">
+                    <td colspan="7" class="text-center py-8 text-slate-500">
+                        현재 등록된 모듈 상태 데이터가 없습니다.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </main>
-
 </div>
 
+<script>
+    let overrideMode = false;
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const overrideBtn = document.getElementById('override-btn');
+        const overrideDisableBtn = document.getElementById('override-disable-btn');
+
+        const timeCells = document.querySelectorAll('.last-operation-time');
+timeCells.forEach(cell => {
+    const originalTime = cell.getAttribute('data-time');
+    if (!originalTime) return;
+
+    // Date 객체로 파싱
+    const utcDate = new Date(originalTime);
+    // 9시간 더하기 (UTC → KST)
+    const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+
+    // 한국형 포맷 (2025.10.27. 03:33:22)
+    const formatted = kstDate.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    // 셀에 표시
+    cell.textContent = formatted;
+});
+
+        // 🔒 오버라이드 활성화 버튼
+        overrideBtn.addEventListener('click', () => {
+            overrideMode = !overrideMode;
+            const controlButtons = document.querySelectorAll('.control-btn');
+            controlButtons.forEach(btn => btn.disabled = !overrideMode);
+
+            overrideBtn.textContent = overrideMode ? "🔓 오버라이드 모드 비활성화" : "🔒 오버라이드 모드 활성화";
+            overrideBtn.classList.toggle("bg-blue-600", overrideMode);
+            overrideBtn.classList.toggle("bg-blue-500", !overrideMode);
+        });
+
+        // 🧹 오버라이드 해제 버튼 (모든 모듈)
+        overrideDisableBtn.addEventListener('click', async () => {
+            const rows = document.querySelectorAll('tbody tr');
+            for (const row of rows) {
+                const moduleName = row.querySelector('td:nth-child(2)')?.innerText?.trim();
+                if (!moduleName) continue;
+                try {
+                    await fetch("/module/override/disable", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ moduleName })
+                    });
+                    console.log(`🧹 ${moduleName} 오버라이드 해제 완료`);
+                } catch (err) {
+                    console.error(`❌ ${moduleName} 해제 실패:`, err);
+                }
+            }
+            alert("✅ 모든 모듈의 오버라이드가 해제되었습니다.");
+        });
+
+        // 개별 ON/OFF 버튼 동작
+        document.querySelectorAll('.btn-on').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const row = btn.closest('tr');
+                const deviceId = row.querySelector('td:nth-child(1)').innerText.trim();
+                const moduleName = row.querySelector('td:nth-child(2)').innerText.trim();
+                fetch("/module/control", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ deviceId, moduleName, command: "on" })
+                }).then(res => res.text()).then(msg => alert(msg));
+            });
+        });
+
+        document.querySelectorAll('.btn-off').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const row = btn.closest('tr');
+                const deviceId = row.querySelector('td:nth-child(1)').innerText.trim();
+                const moduleName = row.querySelector('td:nth-child(2)').innerText.trim();
+                fetch("/module/control", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ deviceId, moduleName, command: "off" })
+                }).then(res => res.text()).then(msg => alert(msg));
+            });
+        });
+    });
+</script>
 
 <div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
-
 </body>
-
 </html>
