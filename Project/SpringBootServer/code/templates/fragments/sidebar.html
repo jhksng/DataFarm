@@ -4,21 +4,17 @@
 
 <aside th:fragment="sidebarFragment(active)" class="w-72 bg-slate-800 text-white flex flex-col p-6">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white tracking-wide">SMARTFARM</h1>
+        <a th:href="@{/}" class="text-3xl font-bold text-white tracking-wide hover:text-blue-400 transition-colors">
+            SMARTFARM
+        </a>
     </div>
+
     <div class="mb-8 text-center">
         <p id="currentDate" class="text-sm text-slate-300"></p>
         <p id="currentTime" class="text-5xl font-extrabold tracking-tight mt-2"></p>
     </div>
-    <div class="flex items-center gap-4 bg-slate-700 py-3 px-4 rounded-md mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.01 12.01 0 002.92 9.157c-.776 2.373-.766 4.84-.016 7.217.553 1.838 1.488 3.541 2.766 4.916 1.144 1.254 2.512 2.345 4.026 3.245a1 1 0 001.079 0c1.514-.9 2.882-1.99 4.026-3.245 1.278-1.375 2.213-3.078 2.766-4.916.75-2.377.76-4.844.016-7.217a12.01 12.01 0 00-3.093-6.208z" /></svg>
-        <div><p class="text-xs text-slate-400">최근 업데이트</p><p class="text-lg font-bold">05:42</p></div>
-    </div>
-    <div class="flex items-center gap-4 bg-slate-700 py-3 px-4 rounded-md mb-8">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        <div><p class="text-xs text-slate-400">총 가동시간</p><p class="text-lg font-bold">19:33</p></div>
-    </div>
-   <nav class="space-y-2">
+
+    <nav class="space-y-2">
         <a th:href="@{/}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'dashboard'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>대시보드</span></a>
         <a th:href="@{/module-status}" class="flex items-center gap-3 px-4 py-3 rounded-md"
@@ -35,8 +31,8 @@
            th:classappend="${active == 'camera'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>카메라</span></a>
         <a th:href="@{/chatbot}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'chatbot'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>챗봇 서비스</span></a>
-        <a th:href="@{/prediction}" class="flex items-center gap-3 px-4 py-3 rounded-md"
-           th:classappend="${active == 'prediction'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>수확 시기 예측</span></a>
+        <a th:href="@{/harvest}" class="flex items-center gap-3 px-4 py-3 rounded-md"
+           th:classappend="${active == 'harvest'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>수확 시기 예측</span></a>
     </nav>
 </aside>
 
