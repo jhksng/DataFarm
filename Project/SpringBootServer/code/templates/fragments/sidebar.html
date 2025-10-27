@@ -20,7 +20,7 @@
         <a th:href="@{/module-status}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'module-status'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>모듈 상태</span></a>
         <a th:href="@{/show_sensor_data}" class="flex items-center gap-3 px-4 py-3 rounded-md"
-           th:classappend="${active == 'sensor-data'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>센서 데이터 현황</span></a>
+           th:classappend="${active == 'show-sensor-data'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>센서 데이터 현황</span></a>
         <a th:href="@{/sensor_history}" class="flex items-center gap-3 px-4 py-3 rounded-md"
            th:classappend="${active == 'sensor-history'} ? 'bg-blue-700 text-white font-semibold' : 'text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'"><span>전체 센서 기록</span></a>
         <a th:href="@{/settings}" class="flex items-center gap-3 px-4 py-3 rounded-md"
