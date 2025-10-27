@@ -208,7 +208,7 @@ public class FarmControlScheduler {
                     // 🌤️ 4️⃣ 목표 조명시간 기준 제어
                     double targetLight = activeCrop.getTargetLight();
                     double lowerBound = targetLight;
-                    double upperBound = targetLight + 2.0; // 목표보다 0.5시간 초과 시 끄기
+                    double upperBound = targetLight + 1.0; // 목표보다 0.5시간 초과 시 끄기
 
                     int newStatus = led.getStatus();
                     String command = led.getCommand();
