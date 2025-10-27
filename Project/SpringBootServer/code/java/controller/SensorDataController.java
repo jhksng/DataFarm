@@ -69,14 +69,23 @@ public class SensorDataController {
                 try {
                     LocalDateTime start = (startDate != null && !startDate.isEmpty()) ? LocalDateTime.parse(startDate) : null;
                     LocalDateTime end = (endDate != null && !endDate.isEmpty()) ? LocalDateTime.parse(endDate) : null;
-                    if (start != null && end != null) predicates.add(criteriaBuilder.between(root.get("timestamp"), start, end));
-                    else if (start != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("timestamp"), start));
-                    else if (end != null) predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), end));
+
+                    // ✅ [추가된 부분] KST → UTC 변환 (DB는 UTC 저장이므로)
+                    if (start != null) start = start.minusHours(9);
+                    if (end != null) end = end.minusHours(9);
+
+                    if (start != null && end != null)
+                        predicates.add(criteriaBuilder.between(root.get("timestamp"), start, end));
+                    else if (start != null)
+                        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("timestamp"), start));
+                    else if (end != null)
+                        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), end));
+
                 } catch (DateTimeParseException e) {
                     model.addAttribute("parsingError", "날짜 형식이 잘못되었습니다. (YYYY-MM-DDTHH:MM)");
-                    // log.error("Date parsing error: {}", e.getMessage()); // 에러 로그도 제거 (필요하면 유지)
                 }
             }
+
             if (filterTempEnabled) {
                 if (minTemp != null && maxTemp != null) predicates.add(criteriaBuilder.between(root.get("temperature"), minTemp, maxTemp));
                 else if (minTemp != null) predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("temperature"), minTemp));
