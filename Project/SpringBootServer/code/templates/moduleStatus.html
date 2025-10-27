@@ -1,0 +1,145 @@
+<!doctype html>
+
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>모듈 상태 현황 - 스마트팜 대시보드</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        body { font-family: 'Noto Sans KR', sans-serif; }
+
+        /* ON 상태 (초록색) */
+
+        .status-on { color: #10B981; font-weight: 600; }
+
+        /* OFF 상태 (빨간색) */
+
+        .status-off { color: #EF4444; font-weight: 600; }
+
+        /* 쿨타임 표시 (작은 글씨) */
+
+        .status-cooldown { font-size: 0.8rem; color: #6B7280; }
+
+    </style>
+
+</head>
+
+<body class="bg-slate-100">
+
+
+
+<div class="flex h-screen">
+
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='module-status')}"></div>
+
+
+
+    <main class="flex-1 p-8 overflow-y-auto">
+
+        <h2 class="text-3xl font-bold text-slate-800 mb-8">모듈 상태 현황</h2>
+
+
+
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-x-auto">
+
+            <div class="p-6">
+
+                <h3 class="text-xl font-semibold text-slate-700">전체 모듈 제어 상태</h3>
+
+            </div>
+
+
+
+            <table class="w-full text-sm text-left text-slate-500">
+
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+
+                <tr>
+
+                    <th scope="col" class="px-6 py-3">장치 ID</th>
+
+                    <th scope="col" class="px-6 py-3">모듈 이름</th>
+
+                    <th scope="col" class="px-6 py-3 text-center">현재 상태</th>
+
+                    <th scope="col" class="px-6 py-3">마지막 명령</th>
+
+                    <th scope="col" class="px-6 py-3">마지막 작동 시간</th>
+
+                    <th scope="col" class="px-6 py-3">누적 조명 시간</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="status : ${statuses}" class="bg-white border-b hover:bg-slate-50">
+
+
+
+                    <td class="px-6 py-4 font-medium text-slate-900" th:text="${status.deviceId}">raspi-01</td>
+
+
+
+                    <td class="px-6 py-4" th:text="${status.moduleName}">LED Lamp</td>
+
+
+
+                    <td class="px-6 py-4 text-center">
+
+                        <span th:if="${status.status == 1}" class="status-on">ON (작동 중)</span>
+
+                        <span th:if="${status.status == 0}" class="status-off">OFF (대기)</span>
+
+                    </td>
+
+
+
+                    <td class="px-6 py-4" th:text="${status.command}">ON</td>
+
+
+
+                    <td class="px-6 py-4" th:text="${#dates.format(status.lastOperationTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</td>
+
+
+
+                    <td class="px-6 py-4" th:text="${#numbers.formatDecimal(status.accumulatedLightTime, 0, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+
+                </tr>
+
+
+
+                <tr th:if="${statuses.isEmpty()}">
+
+                    <td colspan="6" class="text-center py-8 text-slate-500">현재 등록된 모듈 상태 데이터가 없습니다.</td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+    </main>
+
+</div>
+
+
+
+<div th:replace="~{fragments/sidebar :: sidebarScript}"></div>
+
+</body>
+
+</html>
