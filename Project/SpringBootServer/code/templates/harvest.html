@@ -19,7 +19,7 @@
 
 <div class="flex h-screen">
     <!-- ✅ 사이드바 -->
-    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='harvest-predict')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebarFragment(active='harvest')}"></div>
 
     <!-- ✅ 메인 컨텐츠 -->
     <main class="flex-1 p-8 overflow-y-auto">
@@ -72,7 +72,7 @@
                     <div id="gcsRow" style="display:none;">
                         <label for="gcsUri" class="block text-slate-700 font-semibold mb-2">GCS 경로</label>
                         <input type="text" id="gcsUri" name="gcsUri"
-                               placeholder="예: 1_20250101_010101.jpg"
+                               placeholder="예: gs://your-bucket/path/to/image.jpg"
                                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
 
