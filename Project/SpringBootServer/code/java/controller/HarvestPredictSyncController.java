@@ -8,6 +8,8 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.smartfarm.smartfarm_server.model.Photo;
 import com.smartfarm.smartfarm_server.repository.PhotoRepository;
+import com.smartfarm.smartfarm_server.service.GrowthAnalysisService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.StringUtils;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -25,16 +29,22 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/gemini/harvest")
 public class HarvestPredictSyncController {
 
-    private static final String GEMINI_MODEL = "gemini-2.5-flash"; // ✅ 모델명 상수화
+    private static final Logger logger = LoggerFactory.getLogger(HarvestPredictSyncController.class);
+
+    private static final String GEMINI_MODEL = "gemini-2.5-flash";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
     private final Storage storage;
     private final PhotoRepository photoRepository;
+
+    @Autowired
+    private GrowthAnalysisService growthAnalysisService; // ✅ 추가됨
 
     @Value("${gemini.api.key}")
     private String apiKey;
@@ -61,7 +71,7 @@ public class HarvestPredictSyncController {
         Map<String, Object> resp = new LinkedHashMap<>();
         resp.put("ok", false);
 
-        // ── 1️⃣ 입력 검증 ────────────────────────────────────────────────
+        // ── 1️⃣ 입력 검증
         if (!StringUtils.hasText(apiKey))
             return bad(resp, "apiKey", "gemini.api.key 미설정", "application.properties에 키를 설정하세요.");
         if (!StringUtils.hasText(cropName))
@@ -76,7 +86,7 @@ public class HarvestPredictSyncController {
         if (isUpload && !hasFile)
             return bad(resp, "image", "이미지 비어 있음", "파일을 업로드하세요.");
 
-        // ✅ 파일명 일부 입력 시 자동 보정
+        // ── 2️⃣ GCS 경로 보정
         if (!isUpload) {
             if (!hasGcs)
                 return bad(resp, "gcsUri", "GCS 경로 비어 있음", "파일명을 입력하세요.");
@@ -91,7 +101,7 @@ public class HarvestPredictSyncController {
         }
 
         try {
-            // ── 2️⃣ 이미지 로딩 ────────────────────────────────────────────
+            // ── 3️⃣ 이미지 로드
             byte[] imageBytes;
             String mimeType;
             String fileName;
@@ -104,13 +114,7 @@ public class HarvestPredictSyncController {
 
                 fileName = image.getOriginalFilename();
                 mimeType = Optional.ofNullable(image.getContentType())
-                        .orElseGet(() -> {
-                            try {
-                                return Files.probeContentType(Paths.get(fileName));
-                            } catch (Exception e) {
-                                return "image/jpeg";
-                            }
-                        });
+                        .orElse(Files.probeContentType(Paths.get(fileName)));
             } else {
                 GcsPath path = parseGcsUri(gcsUri);
                 String bucket = StringUtils.hasText(path.bucket) ? path.bucket : defaultBucket;
@@ -126,28 +130,46 @@ public class HarvestPredictSyncController {
                 fileName = path.object;
             }
 
-            // ── 3️⃣ brightnessRatio 가져오기 ────────────────────────────────
+            // ── 4️⃣ brightnessRatio (gcs 모드)
             Float brightnessRatio = null;
             if (!isUpload) {
                 String keyword = gcsUri.substring(gcsUri.lastIndexOf('/') + 1);
-                Optional<Photo> photoOpt = photoRepository.findTopByPhotoUrlContainingOrderByUploadDateDesc(keyword);
-                if (photoOpt.isPresent()) {
-                    brightnessRatio = photoOpt.get().getBrightnessRatio();
-                    // DB 값이 0~1 사이면 100배 해줌
-                    if (brightnessRatio != null && brightnessRatio < 1.0f) {
-                        brightnessRatio *= 100;
-                    }
-                    resp.put("brightnessRatio", brightnessRatio);
-                }
+                photoRepository.findTopByPhotoUrlContainingOrderByUploadDateDesc(keyword)
+                        .ifPresent(photo -> {
+                            Float ratio = normalizeBrightnessRatio(photo.getBrightnessRatio());
+                            if (ratio != null) {
+                                resp.put("brightnessRatio", ratio);
+                            }
+                        });
             }
 
-            // ── 4️⃣ 컬러 분석 이미지 판별 ────────────────────────────────
+            // ── 5️⃣ GrowthAnalysisService 로 전일 대비 성장률 계산
+            Map<String, Double> growthStats = growthAnalysisService.calculateDailyGrowthChange(cropName);
+            Double dayDeltaPct = growthStats.get("growthChangePercentage");
+            Double prevAvg = growthStats.get("yesterdayAvg");
+            Double todayAvg = growthStats.get("todayAvg");
+
+            if (dayDeltaPct != null) {
+                resp.put("growthChangePercentage", dayDeltaPct);
+                resp.put("previousAvg", prevAvg);
+                resp.put("recentAvg", todayAvg);
+                resp.put("window", "last48_today_vs_yesterday");
+
+                logger.info(String.format(
+                        "🌿 [%s] 성장률 계산 완료: 어제 %.2f%% → 오늘 %.2f%% (전일 대비 %.2f%%)",
+                        cropName, prevAvg, todayAvg, dayDeltaPct
+                ));
+            } else {
+                logger.warn("⚠️ [{}] 성장률 계산 실패 (데이터 부족)", cropName);
+            }
+
+            // ── 6️⃣ 컬러 분석 이미지 판별
             boolean isColorMask = isPseudoColorImage(imageBytes);
 
-            // ✅ 프롬프트 생성
-            String promptText = buildPrompt(isColorMask, cropName, brightnessRatio);
+            // ✅ AI 프롬프트 생성 (공통 계산 결과도 함께 전달)
+            String promptText = buildPrompt(isColorMask, cropName, brightnessRatio, dayDeltaPct);
 
-            // ── 5️⃣ Gemini API 요청 ─────────────────────────────────────────
+            // ── 7️⃣ Gemini API 호출
             String base64 = Base64.getEncoder().encodeToString(imageBytes);
             Map<String, Object> requestBody = Map.of(
                     "contents", List.of(Map.of(
@@ -170,7 +192,7 @@ public class HarvestPredictSyncController {
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-            // ── 6️⃣ 응답 파싱 ─────────────────────────────────────────
+            // ── 8️⃣ 응답 처리
             if (response.getStatusCode().is2xxSuccessful()) {
                 JsonNode node = objectMapper.readTree(response.getBody());
                 String text = node.path("candidates").get(0)
@@ -197,7 +219,13 @@ public class HarvestPredictSyncController {
         }
     }
 
-    // ── Helper ──────────────────────────────────────────────
+    private Float normalizeBrightnessRatio(Float ratio) {
+        if (ratio == null) return null;
+        if (ratio < 1.0f) return ratio * 100f; // 0~1 스케일 → %로 변환
+        return ratio;
+    }
+
+    // ── Helper
     private static ResponseEntity<Map<String, Object>> bad(Map<String, Object> resp, String field, String title, String detail) {
         resp.put("errors", List.of(Map.of("field", field, "title", title, "detail", detail)));
         return ResponseEntity.ok(resp);
@@ -219,7 +247,6 @@ public class HarvestPredictSyncController {
         }
     }
 
-    // 🎨 컬러 분석용 이미지 판별
     private boolean isPseudoColorImage(byte[] imageBytes) {
         try {
             BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
@@ -242,41 +269,55 @@ public class HarvestPredictSyncController {
 
             double magentaRatio = (double) magentaCount / total;
             double blueRatio = (double) blueCount / total;
-
-            // ✅ 5% 이상일 때 색상 마스크로 인식 (완화됨)
             return magentaRatio > 0.05 && blueRatio > 0.05;
         } catch (Exception e) {
             return false;
         }
     }
 
-    // 🌾 프롬프트 생성 로직
-    private String buildPrompt(boolean isColorMask, String cropName, Float brightnessRatio) {
+    private String buildPrompt(boolean isColorMask, String cropName, Float brightnessRatio, Double dayDeltaPct) {
         StringBuilder prompt = new StringBuilder();
+
+        prompt.append("작물 이름: ").append(cropName).append("\n");
+
         if (isColorMask) {
             prompt.append("""
-                    당신은 농작물 생육 분석 전문가예요.
-                    이 이미지는 색상 기반 생육 분석용 영상입니다.
-                    - 마젠타(보라/핑크)는 잎 영역, 파랑/검정은 배경입니다.
-                    마젠타 영역의 면적, 색 농도, 형태를 기반으로
-                    생장 단계(초기/중기/수확기)를 2~3문장으로 설명하고 예상 수확시기를 제시해주세요.
-                    """);
+                당신은 농작물 생육 분석 전문가예요.
+                이 이미지는 색상 기반 생육 분석용 영상입니다.
+                - 마젠타(보라/핑크)는 잎 영역, 파랑/검정은 배경입니다.
+                마젠타 영역의 면적, 색 농도, 형태를 기반으로
+                생장 단계(초기/중기/수확기)를 2~3문장으로 설명하고 예상 수확시기를 제시해주세요.
+            """);
         } else {
             prompt.append("""
-                    당신은 농작물 전문가예요.
-                    주어진 이미지와 작물 이름을 보고 현재 상태를 요약하고,
-                    예상 수확 시기를 2~3문장으로 간단히 알려주세요.
-                    """);
+                당신은 농작물 전문가예요.
+                주어진 이미지와 작물 이름을 보고 현재 상태를 요약하고,
+                예상 수확 시기를 2~3문장으로 간단히 알려주세요.
+            """);
         }
 
         if (brightnessRatio != null) {
-            prompt.append("\n추가 데이터: 이 이미지의 마젠타 영역(잎 면적 비율)은 전체 픽셀의 ")
-                    .append(String.format("%.2f", brightnessRatio))
-                    .append("% 입니다. 이 수치를 참고하여 생장 정도를 함께 고려하세요.");
+            prompt.append("\n추가 데이터1: 현재 이미지의 잎 면적 비율(마젠타 비중)은 ")
+                    .append(String.format(Locale.US, "%.2f", brightnessRatio))
+                    .append("% 입니다.");
         }
 
-        prompt.append("\n작물 이름: ").append(cropName)
-                .append("\n불확실하다면 '정확한 판단이 어렵습니다.'라고 답하세요.");
+        if (dayDeltaPct != null) {
+            prompt.append("\n추가 데이터2: 최근 24장 평균 대비 전일 대비 성장률은 ")
+                    .append(String.format(Locale.US, "%.2f", dayDeltaPct))
+                    .append("% 입니다. (양수=증가, 음수=감소)");
+        }
+
+        prompt.append("""
+    
+            판단 규칙:
+            - 변화율 ≤ -5%: '시들거나 잎 면적 감소 가능성 높음'으로 판단하고, 수분 부족·고온·병해·영양결핍 등의 원인을 우선 설명하세요.
+            - -5% < 변화율 ≤ 0%: '성장 둔화 가능성'으로 판단하고, 온도·습도·광량 등 환경 요인을 점검하세요.
+            - 0% < 변화율 < +5%: '유지 또는 완만한 성장'으로 보고, 정상적인 생육 상태로 간주하세요.
+            - 변화율 ≥ +5%: '양호' 또는 '성장 증가'로 요약하세요.
+            LED 조명으로 엽록소 색이 왜곡될 수 있으니, 잎 끝 말림·처짐·수분 스트레스 징후도 함께 고려해 주세요.
+        """);
+
         return prompt.toString();
     }
 }
