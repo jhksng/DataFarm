@@ -132,7 +132,10 @@ public class HarvestPredictSyncController {
 
             // ── 4️⃣ brightnessRatio (gcs 모드)
             Float brightnessRatio = null;
+            Double dayDeltaPct = null;
+
             if (!isUpload) {
+                // ─ brightnessRatio 계산
                 String keyword = gcsUri.substring(gcsUri.lastIndexOf('/') + 1);
                 photoRepository.findTopByPhotoUrlContainingOrderByUploadDateDesc(keyword)
                         .ifPresent(photo -> {
@@ -141,26 +144,31 @@ public class HarvestPredictSyncController {
                                 resp.put("brightnessRatio", ratio);
                             }
                         });
-            }
 
-            // ── 5️⃣ GrowthAnalysisService 로 전일 대비 성장률 계산
-            Map<String, Double> growthStats = growthAnalysisService.calculateDailyGrowthChange(cropName);
-            Double dayDeltaPct = growthStats.get("growthChangePercentage");
-            Double prevAvg = growthStats.get("yesterdayAvg");
-            Double todayAvg = growthStats.get("todayAvg");
+                // ─ GrowthAnalysisService로 성장률 계산
+                Map<String, Double> growthStats = growthAnalysisService.calculateDailyGrowthChange(cropName);
+                dayDeltaPct = growthStats.get("growthChangePercentage");
 
-            if (dayDeltaPct != null) {
-                resp.put("growthChangePercentage", dayDeltaPct);
-                resp.put("previousAvg", prevAvg);
-                resp.put("recentAvg", todayAvg);
-                resp.put("window", "last48_today_vs_yesterday");
+                if (dayDeltaPct != null) {
+                    resp.put("growthChangePercentage", dayDeltaPct);
+                    resp.put("previousAvg", growthStats.get("yesterdayAvg"));
+                    resp.put("recentAvg", growthStats.get("todayAvg"));
+                    resp.put("window", "last48_today_vs_yesterday");
 
-                logger.info(String.format(
-                        "🌿 [%s] 성장률 계산 완료: 어제 %.2f%% → 오늘 %.2f%% (전일 대비 %.2f%%)",
-                        cropName, prevAvg, todayAvg, dayDeltaPct
-                ));
+                    logger.info(String.format(
+                            "🌿 [%s] 성장률 계산 완료: 어제 %.2f%% → 오늘 %.2f%% (전일 대비 %.2f%%)",
+                            cropName, growthStats.get("yesterdayAvg"),
+                            growthStats.get("todayAvg"), dayDeltaPct
+                    ));
+                } else {
+                    // ✅ GCS 모드지만 데이터 부족한 경우
+                    logger.warn("⚠️ [{}] 성장률 계산 실패 (데이터 부족)", cropName);
+                }
+
             } else {
-                logger.warn("⚠️ [{}] 성장률 계산 실패 (데이터 부족)", cropName);
+                // ✅ 업로드 모드: 수치 데이터 완전히 제외
+                brightnessRatio = null;
+                dayDeltaPct = null;
             }
 
             // ── 6️⃣ 컬러 분석 이미지 판별
