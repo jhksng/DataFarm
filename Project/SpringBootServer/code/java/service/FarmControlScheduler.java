@@ -358,10 +358,20 @@ public class FarmControlScheduler {
         module.setStatus(status);
         module.setCommand(command);
 
-        // ✅ LED 누적 조명 시간 처리
+        // ✅ [보호 로직 추가] LED 누적 조명시간이 0으로 덮어쓰기 되는 것 방지
+        double accLightToSave = accumulatedLightTime;
         if ("led".equals(moduleName)) {
-            module.setAccumulatedLightTime(accumulatedLightTime);
-            // LED가 OFF → ON 으로 바뀔 때만 commandTime 갱신
+            double currentStored = module.getAccumulatedLightTime() != null ? module.getAccumulatedLightTime() : 0.0;
+
+            // 새로 받은 값이 0이고 기존 값이 있다면 유지
+            if (accumulatedLightTime == 0.0 && currentStored > 0.0) {
+                accLightToSave = currentStored;
+                logger.debug("💾 [LED] 기존 누적 조명시간 유지: {}h", String.format("%.3f", accLightToSave));
+            }
+
+            module.setAccumulatedLightTime(accLightToSave);
+
+            // LED가 OFF → ON으로 바뀔 때만 commandTime 갱신
             if (status == 1 && (previousStatus == null || previousStatus == 0)) {
                 module.setCommandTime(new Date());
             }
@@ -383,3 +393,4 @@ public class FarmControlScheduler {
         logger.info("✅ [{}] 상태={}, 명령='{}' (MQTT 전송)", moduleName, status, command);
     }
 }
+
