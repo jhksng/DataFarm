@@ -31,7 +31,7 @@
 <b>
 
 <ul>
-        <li><b>Back-end Server</b>: Spring Boot (Java)
+        <li><b>Back-end Server</b>: Spring Boot (Java 17)
             <ul>
                 <li>Server OS: Google Compute Engine (<b>Linux (Debian)</b>)</li>
             </ul>
@@ -44,15 +44,21 @@
         </li>
         <li><b>IoT & Communication</b>:
             <ul>
-                <li>IoT Device: Raspberry Pi</li>
-                <li>IoT Device OS: <b>Raspberry Pi OS (Linux)</b></li>
-                <li>Protocol: <b>MQTT</b></li>
+                <li>IoT Device: Raspberry Pi (Phthon + OpenCV + PiCamera2)</li>
+                <li>IoT Device: Arduino (C++)</li>
+                <li>Protocol: <b>MQTT (Mosquitto Broker, JSON</b></li>
             </ul>
         </li>
         <li><b>Front-end & Design</b>:
             <ul>
-                <li>Front-end: HTML, CSS</li>
+                <li>Front-end: HTML, CSS, JavaScript</li>
                 <li>Design: Figma</li>
+            </ul>
+        </li>
+        <li><b>AI & Data Analysis</b>:
+            <ul>
+              <li>OpenCV (식물 이미지 분석, 생장 수치 계산)</li>
+              <li>Google Gemini API (챗봇, 수확 예측)</li>
             </ul>
         </li>
         <li><b>Tools</b>:
