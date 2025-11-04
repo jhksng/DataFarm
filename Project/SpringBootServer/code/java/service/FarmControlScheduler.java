@@ -172,63 +172,54 @@ public class FarmControlScheduler {
 // 💡 LED 제어 (정교한 누적 조명 시간 관리 + 오버라이드)
 // =====================================================================
         if (led != null) {
-
             long currentTime = System.currentTimeMillis();
 
-            // 🌙 1️⃣ 수동 오버라이드 확인
+            // 1️⃣ 수동 오버라이드 확인
             if (isManualOverrideActive("led")) {
                 logger.warn("🛠️ [LED] 수동 오버라이드 활성 중 - 자동 제어 무시");
-            } else {
-                // 📸 2️⃣ 촬영 오버라이드 확인
-                long photoForceUntil = getPhotoForceOffTime();
-                if (currentTime < photoForceUntil) {
-                    updateModuleStatus("led", 1, "on", led.getAccumulatedLightTime());
-                    logger.warn("📸 [LED] 촬영 오버라이드 중 - 강제 ON 유지 (종료: {})", new Date(photoForceUntil));
-                } else {
-                    // 🌤️ 3️⃣ 누적 조명시간 계산 (ON 상태일 때만)
-                    double accLight = led.getAccumulatedLightTime();
-
-// 마지막 계산 시각 저장용 키
-                    String LED_LAST_UPDATE_KEY = "ledLastUpdateTime";
-                    long lastUpdateTime = (long) stateStore.getOrDefault(LED_LAST_UPDATE_KEY, currentTime);
-                    long elapsed = currentTime - lastUpdateTime;
-
-// ✅ LED가 켜져 있을 때만 시간 누적 및 기준시각 갱신
-                    if (led.getStatus() == 1) {
-                        // 💡 1분 이상 지연될 경우에도 1분만 누적되도록 보정
-                        long safeElapsed = Math.min(elapsed, 60000);
-                        double elapsedHours = safeElapsed / (1000.0 * 60.0 * 60.0);
-                        accLight += elapsedHours;
-                        stateStore.put(LED_LAST_UPDATE_KEY, currentTime);
-                    }
-
-// OFF 상태일 때는 업데이트 시간 갱신하지 않음
-                    updateModuleStatus("led", led.getStatus(), led.getCommand(), accLight);
-
-                    // 🌤️ 4️⃣ 목표 조명시간 기준 제어
-                    double targetLight = activeCrop.getTargetLight();
-                    double lowerBound = targetLight;
-                    double upperBound = targetLight + 1.0; // 목표보다 0.5시간 초과 시 끄기
-
-                    int newStatus = led.getStatus();
-                    String command = led.getCommand();
-
-                    if (accLight < lowerBound) {
-                        newStatus = 1;
-                        command = "on";
-                        logger.info("💡 [LED] 누적 조명 {}h < 목표 {}h → ON",
-                                String.format("%.2f", accLight), String.format("%.2f", targetLight));
-                    } else if (accLight > upperBound) {
-                        newStatus = 0;
-                        command = "off";
-                        logger.info("🌑 [LED] 누적 조명 {}h > 목표+2h ({}h) → OFF",
-                                String.format("%.2f", accLight), String.format("%.2f", upperBound));
-                    }
-
-                    // ✅ DB + MQTT 갱신
-                    updateModuleStatus("led", newStatus, command, accLight);
-                }
+                return;
             }
+
+            // 2️⃣ 촬영 오버라이드 확인
+            long photoForceUntil = getPhotoForceOffTime();
+            if (currentTime < photoForceUntil) {
+                updateModuleStatus("led", 1, "on", led.getAccumulatedLightTime());
+                logger.warn("📸 [LED] 촬영 오버라이드 중 - 강제 ON 유지 (종료: {})", new Date(photoForceUntil));
+                return;
+            }
+
+            // 3️⃣ 누적 조명시간 계산 (ON 상태일 때만 1분 단위로 적산)
+            double accLight = led.getAccumulatedLightTime();
+            if (led.getStatus() == 1 && led.getCommandTime() != null) {
+                long elapsed = currentTime - led.getCommandTime().getTime();
+                double elapsedHours = elapsed / (1000.0 * 60.0 * 60.0);
+                accLight += elapsedHours;
+
+                // ✅ 다음 루프 계산을 위해 commandTime을 지금 시각으로 갱신
+                led.setCommandTime(new Date());
+
+                logger.info("💡 [LED] 누적 조명시간 +{}h → 총 {}h",
+                        String.format("%.2f", elapsedHours), String.format("%.2f", accLight));
+            }
+
+            // 4️⃣ 목표 조명시간 기준으로 제어 판단
+            double targetLight = activeCrop.getTargetLight();
+            double lowerBound = targetLight;
+            double upperBound = targetLight + 2.0;
+
+            int newStatus = led.getStatus();
+            String command = led.getCommand();
+
+            if (accLight < lowerBound) {
+                newStatus = 1;
+                command = "on";
+            } else if (accLight > upperBound) {
+                newStatus = 0;
+                command = "off";
+            }
+
+            // 5️⃣ DB + MQTT 갱신
+            updateModuleStatus("led", newStatus, command, accLight);
         }
 
 
@@ -270,18 +261,42 @@ public class FarmControlScheduler {
             if (isManualOverrideActive("coolerA")) {
                 logger.warn("🛠️ coolerA 오버라이드 활성 중 - 자동 제어 건너뜀");
             } else {
-                long lastStart = getCoolerLastStartTime("coolerA");
-                long elapsed = now - lastStart;
+                double temp = data.getTemperature();
+                double humi = data.getHumidity();
+                double targetTemp = activeCrop.getTargetTemp();
+                double targetHumi = activeCrop.getTargetHumi();
 
-                if (elapsed >= COOLER_A_CYCLE_DURATION) {
-                    // 새로운 주기 시작: 쿨러 ON
-                    updateModuleStatus("coolerA", 1, "on", 0.0);
-                    setCoolerLastStartTime("coolerA", now);
-                    logger.info("🌬️ [coolerA] 주기 시작 - 쿨러 ON (15분 주기)");
-                } else if (elapsed >= COOLER_A_RUN_DURATION) {
-                    // 가동 시간 초과: 쿨러 OFF
-                    updateModuleStatus("coolerA", 0, "off", 0.0);
+                boolean shouldBeOn = false;
+
+// ① 온도가 가장 중요
+                if (temp > targetTemp + 0.3) {
+                    shouldBeOn = true;
+                    logger.info("🌡️ [coolerA] 온도 {}°C > 목표 {}°C +0.3 → 냉각 필요",
+                            String.format("%.2f", temp), String.format("%.2f", targetTemp));
                 }
+// ② 온도가 정상인데 습도만 높을 경우
+                else if (humi > targetHumi + 10.0) {
+                    shouldBeOn = true;
+                    logger.info("💧 [coolerA] 습도 {}% > 목표 {}% +10 → 냉각 필요",
+                            String.format("%.1f", humi), String.format("%.1f", targetHumi));
+                }
+// ③ 온도/습도 모두 정상일 때만 순환 제어 적용
+                else {
+                    long lastStart = getCoolerLastStartTime("coolerA");
+                    long elapsed = now - lastStart;
+                    if (elapsed >= COOLER_A_CYCLE_DURATION) {
+                        shouldBeOn = true;
+                        setCoolerLastStartTime("coolerA", now);
+                        logger.info("🌬️ [coolerA] 주기 시작 - 쿨러 ON (15분 주기)");
+                    } else if (elapsed < COOLER_A_RUN_DURATION && lastStart != 0L) {
+                        shouldBeOn = true;
+                    }
+                }
+
+                // ④ 상태 결정
+                int newStatus = shouldBeOn ? 1 : 0;
+                String command = shouldBeOn ? "on" : "off";
+                updateModuleStatus("coolerA", newStatus, command, 0.0);
             }
         }
 
@@ -358,20 +373,10 @@ public class FarmControlScheduler {
         module.setStatus(status);
         module.setCommand(command);
 
-        // ✅ [보호 로직 추가] LED 누적 조명시간이 0으로 덮어쓰기 되는 것 방지
-        double accLightToSave = accumulatedLightTime;
+        // ✅ LED 누적 조명 시간 처리
         if ("led".equals(moduleName)) {
-            double currentStored = module.getAccumulatedLightTime() != null ? module.getAccumulatedLightTime() : 0.0;
-
-            // 새로 받은 값이 0이고 기존 값이 있다면 유지
-            if (accumulatedLightTime == 0.0 && currentStored > 0.0) {
-                accLightToSave = currentStored;
-                logger.debug("💾 [LED] 기존 누적 조명시간 유지: {}h", String.format("%.3f", accLightToSave));
-            }
-
-            module.setAccumulatedLightTime(accLightToSave);
-
-            // LED가 OFF → ON으로 바뀔 때만 commandTime 갱신
+            module.setAccumulatedLightTime(accumulatedLightTime);
+            // LED가 OFF → ON 으로 바뀔 때만 commandTime 갱신
             if (status == 1 && (previousStatus == null || previousStatus == 0)) {
                 module.setCommandTime(new Date());
             }
@@ -393,4 +398,3 @@ public class FarmControlScheduler {
         logger.info("✅ [{}] 상태={}, 명령='{}' (MQTT 전송)", moduleName, status, command);
     }
 }
-
