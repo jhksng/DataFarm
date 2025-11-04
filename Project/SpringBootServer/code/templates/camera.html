@@ -123,7 +123,7 @@
         if (totalPages <= 1) return;
 
         // 표시할 페이지 버튼의 최대 개수 설정 (예: 1 2 [3] 4 5)
-        const maxPagesToShow = 5;
+        const maxPagesToShow = 10;
         let startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
         let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
 
