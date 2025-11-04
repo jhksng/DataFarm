@@ -44,7 +44,7 @@
         </li>
         <li><b>IoT & Communication</b>:
             <ul>
-                <li>IoT Device: Raspberry Pi (Phthon + OpenCV + PiCamera2)</li>
+                <li>IoT Device: Raspberry Pi (Python + OpenCV + PiCamera2)</li>
                 <li>IoT Device: Arduino (C++)</li>
                 <li>Protocol: <b>MQTT (Mosquitto Broker, JSON</b></li>
             </ul>
