@@ -40,7 +40,7 @@ public class ModuleControlController {
         farmControlScheduler.enableManualOverride(moduleName, overrideMinutes);
 
         // ✅ 즉시 모듈 상태 업데이트 및 MQTT 전송
-        farmControlScheduler.updateModuleStatus(moduleName, status, command, 0.0);
+        farmControlScheduler.updateModuleStatus(moduleName, status, command, null);
 
         return ResponseEntity.ok(
                 "✅ [" + moduleName + "] 명령: " + command.toUpperCase() +
